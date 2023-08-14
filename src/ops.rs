@@ -134,9 +134,9 @@ impl std::ops::Div<Vector3> for Vector3 {
 /// Implementation of division assignment (`/=`) operation for `Vector3` with a scalar.
 impl std::ops::DivAssign<f64> for Vector3 {
     /// Divides each component of this `Vector3` instance by a scalar value in-place.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics if any resulting component becomes NaN.
     fn div_assign(&mut self, rhs: f64) {
         self.x /= rhs;

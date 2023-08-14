@@ -1,15 +1,15 @@
 #![deny(unsafe_code, warnings, clippy::all)]
 
+mod consts;
 mod convert;
 mod float_lerp;
 mod ops;
-mod consts;
 
 use float_lerp::Lerp;
 use rand::{thread_rng, Rng};
 
 /// Represents a vector in 3D space.
-/// 
+///
 /// Doesn't allow for NaN coordinates.
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Vector3 {
@@ -42,19 +42,35 @@ impl Vector3 {
     // Constructors for creating Vector3 instances from different types
 
     pub fn from_i32(x: i32, y: i32, z: i32) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_u32(x: u32, y: u32, z: u32) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_i64(x: i64, y: i64, z: i64) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_u64(x: u64, y: u64, z: u64) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     /// Generates a random Vector3 with components in the range [0.0, 1.0).
