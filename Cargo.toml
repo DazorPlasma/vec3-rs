@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "A simple 3D vector math library"
 license = "MIT"
+repository = "https://github.com/DazorPlasma/vec3-rs"
 authors = ["dazor"]
 
 [profile.release]
