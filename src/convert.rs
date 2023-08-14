@@ -1,11 +1,15 @@
 #![deny(unsafe_code, warnings, clippy::all)]
 
-use thiserror::Error;
 use crate::Vector3;
+use thiserror::Error;
 
 impl From<(f64, f64, f64)> for Vector3 {
     fn from(value: (f64, f64, f64)) -> Self {
-        Vector3 {x: value.0, y: value.1, z: value.2}
+        Vector3 {
+            x: value.0,
+            y: value.1,
+            z: value.2,
+        }
     }
 }
 
@@ -17,7 +21,11 @@ impl From<Vector3> for (f64, f64, f64) {
 
 impl From<[f64; 3]> for Vector3 {
     fn from(value: [f64; 3]) -> Self {
-        Vector3 { x: value[0], y: value[1], z: value[2] }
+        Vector3 {
+            x: value[0],
+            y: value[1],
+            z: value[2],
+        }
     }
 }
 
@@ -34,7 +42,7 @@ pub enum ParseVector3Error {
     #[error("invalid format")]
     InvalidFormat,
     #[error("invalid Vec<f64>")]
-    InvalidVec
+    InvalidVec,
 }
 
 impl TryFrom<&str> for Vector3 {
@@ -48,7 +56,7 @@ impl TryFrom<&str> for Vector3 {
             return Err(ParseVector3Error::InvalidFormat);
         }
 
-        let data = &value[8..value.len()-1];
+        let data = &value[8..value.len() - 1];
         let mut new_vector: [f64; 3] = [0.0, 0.0, 0.0];
         for (index, coord) in data.split(',').enumerate() {
             new_vector[index] = coord.trim().parse::<f64>()?;

@@ -1,5 +1,6 @@
 #![deny(unsafe_code, warnings, clippy::all)]
 
+mod consts;
 mod convert;
 mod float_lerp;
 mod ops;
@@ -8,7 +9,7 @@ use float_lerp::Lerp;
 use rand::{thread_rng, Rng};
 
 /// Represents a vector in 3D space.
-/// 
+///
 /// Doesn't allow for NaN coordinates.
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Vector3 {
@@ -16,21 +17,6 @@ pub struct Vector3 {
     y: f64,
     z: f64,
 }
-
-/// Predefined constant vector along the X-axis.
-const X_AXIS: Vector3 = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
-
-/// Predefined constant vector along the Y-axis.
-const Y_AXIS: Vector3 = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
-
-/// Predefined constant vector along the Z-axis.
-const Z_AXIS: Vector3 = Vector3 { x: 0.0, y: 0.0, z: 1.0 };
-
-/// Predefined constant zero vector.
-const VECTOR3_ZERO: Vector3 = Vector3 { x: 0.0, y: 0.0, z: 0.0 };
-
-/// Predefined constant unit vector.
-const VECTOR3_ONE: Vector3 = Vector3 { x: 1.0, y: 1.0, z: 1.0 };
 
 impl Vector3 {
     /// Creates a new Vector3 with the specified coordinates.
@@ -56,19 +42,35 @@ impl Vector3 {
     // Constructors for creating Vector3 instances from different types
 
     pub fn from_i32(x: i32, y: i32, z: i32) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_u32(x: u32, y: u32, z: u32) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_i64(x: i64, y: i64, z: i64) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     pub fn from_u64(x: u64, y: u64, z: u64) -> Self {
-        Vector3 {x: x as f64, y:  y as f64, z: z as f64}
+        Vector3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 
     /// Generates a random Vector3 with components in the range [0.0, 1.0).
@@ -78,33 +80,6 @@ impl Vector3 {
             y: thread_rng().gen(),
             z: thread_rng().gen(),
         }
-    }
-
-    // Predefined constant vector accessors
-
-    /// Returns a reference to a Vector3 representing the X-axis.
-    pub fn x_axis() -> &'static Self {
-        &X_AXIS
-    }
-
-    /// Returns a reference to a Vector3 representing the Y-axis.
-    pub fn y_axis() -> &'static Self {
-        &Y_AXIS
-    }
-
-    /// Returns a reference to a Vector3 representing the Z-axis.
-    pub fn z_axis() -> &'static Self {
-        &Z_AXIS
-    }
-
-    /// Returns a reference to the zero vector (0, 0, 0).
-    pub fn zero() -> &'static Self {
-        &VECTOR3_ZERO
-    }
-
-    /// Returns a reference to the unit vector (1, 1, 1).
-    pub fn one() -> &'static Self {
-        &VECTOR3_ONE
     }
 
     /// Scales the vector such that its magnitude becomes 1.
@@ -219,7 +194,7 @@ mod tests {
     #[test]
     fn angle() {
         let angle = 1.5707963267948966;
-        let calc_angle = Vector3::x_axis().angle(Vector3::y_axis());
+        let calc_angle = consts::X_AXIS.angle(&consts::Y_AXIS);
         assert_eq!(calc_angle, angle);
     }
 
