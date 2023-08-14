@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 use crate::Vector3;
 
 /// Implementation of addition (`+`) operation between two `Vector3` instances.

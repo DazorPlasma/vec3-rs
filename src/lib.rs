@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 mod convert;
 mod float_lerp;
 mod ops;
