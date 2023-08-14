@@ -1,6 +1,6 @@
 #![deny(unsafe_code, warnings, clippy::all)]
 
-mod consts;
+pub mod consts;
 mod convert;
 mod float_lerp;
 mod ops;
