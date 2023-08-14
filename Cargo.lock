@@ -118,7 +118,7 @@ checksum = "301abaae475aa91687eb82514b328ab47a211a533026cb25fc3e519b86adfc3c"
 
 [[package]]
 name = "vec3-rs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rand",
  "thiserror",
