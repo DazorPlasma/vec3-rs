@@ -1,5 +1,7 @@
 # vec3-rs
 
+https://crates.io/crates/vec3-rs
+
 This crate provides a simple and efficient implementation of 3D vectors in Rust, with various utility functions for vector manipulation and operations.
 
 ## Features
