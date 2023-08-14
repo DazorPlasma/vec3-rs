@@ -1,4 +1,4 @@
-# Vector3 Crate for Rust
+# vec3-rs
 
 This crate provides a simple and efficient implementation of 3D vectors in Rust, with various utility functions for vector manipulation and operations.
 
@@ -11,7 +11,7 @@ This crate provides a simple and efficient implementation of 3D vectors in Rust,
 - Provides methods for vector normalization, linear interpolation, and angle calculations.
 - Allows fuzzy equality comparison within a specified epsilon.
 
-## Examples
+## Example
 ```rust
 use vec3_rs::Vector3;
 
@@ -33,6 +33,5 @@ fn main() {
 
     println!("Sum: {:?}", sum);
     println!("Normalized: {:?}", normalized);
-    // ... more examples ...
 }
 ```
