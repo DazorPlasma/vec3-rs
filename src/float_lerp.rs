@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 /// A trait for linear interpolation (lerp) between two values of type `T` using a blending factor `alpha`.
 ///
 /// The `Lerp` trait provides a method to perform linear interpolation between two values, which

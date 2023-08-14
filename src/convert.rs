@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 use thiserror::Error;
 use crate::Vector3;
 
