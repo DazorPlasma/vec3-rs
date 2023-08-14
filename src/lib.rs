@@ -3,6 +3,7 @@
 mod convert;
 mod float_lerp;
 mod ops;
+mod consts;
 
 use float_lerp::Lerp;
 use rand::{thread_rng, Rng};
@@ -16,21 +17,6 @@ pub struct Vector3 {
     y: f64,
     z: f64,
 }
-
-/// Predefined constant vector along the X-axis.
-const X_AXIS: Vector3 = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
-
-/// Predefined constant vector along the Y-axis.
-const Y_AXIS: Vector3 = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
-
-/// Predefined constant vector along the Z-axis.
-const Z_AXIS: Vector3 = Vector3 { x: 0.0, y: 0.0, z: 1.0 };
-
-/// Predefined constant zero vector.
-const VECTOR3_ZERO: Vector3 = Vector3 { x: 0.0, y: 0.0, z: 0.0 };
-
-/// Predefined constant unit vector.
-const VECTOR3_ONE: Vector3 = Vector3 { x: 1.0, y: 1.0, z: 1.0 };
 
 impl Vector3 {
     /// Creates a new Vector3 with the specified coordinates.
@@ -78,33 +64,6 @@ impl Vector3 {
             y: thread_rng().gen(),
             z: thread_rng().gen(),
         }
-    }
-
-    // Predefined constant vector accessors
-
-    /// Returns a reference to a Vector3 representing the X-axis.
-    pub fn x_axis() -> &'static Self {
-        &X_AXIS
-    }
-
-    /// Returns a reference to a Vector3 representing the Y-axis.
-    pub fn y_axis() -> &'static Self {
-        &Y_AXIS
-    }
-
-    /// Returns a reference to a Vector3 representing the Z-axis.
-    pub fn z_axis() -> &'static Self {
-        &Z_AXIS
-    }
-
-    /// Returns a reference to the zero vector (0, 0, 0).
-    pub fn zero() -> &'static Self {
-        &VECTOR3_ZERO
-    }
-
-    /// Returns a reference to the unit vector (1, 1, 1).
-    pub fn one() -> &'static Self {
-        &VECTOR3_ONE
     }
 
     /// Scales the vector such that its magnitude becomes 1.
@@ -219,7 +178,7 @@ mod tests {
     #[test]
     fn angle() {
         let angle = 1.5707963267948966;
-        let calc_angle = Vector3::x_axis().angle(Vector3::y_axis());
+        let calc_angle = consts::X_AXIS.angle(&consts::Y_AXIS);
         assert_eq!(calc_angle, angle);
     }
 
