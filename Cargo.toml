@@ -1,0 +1,14 @@
+[package]
+name = "vec3-rs"
+version = "0.1.0"
+edition = "2021"
+description = "A simple 3D vector math library"
+license = "MIT"
+authors = ["dazor"]
+
+[profile.release]
+lto = true
+
+[dependencies]
+rand = "0.8.5"
+thiserror = "1.0.44"
