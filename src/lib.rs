@@ -11,7 +11,7 @@ use rand::{thread_rng, Rng};
 /// Represents a vector in 3D space.
 ///
 /// Doesn't allow for NaN coordinates.
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Vector3 {
     x: f64,
     y: f64,
