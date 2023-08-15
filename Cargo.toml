@@ -8,7 +8,6 @@ authors = ["dazor"]
 documentation = "https://docs.rs/vec3-rs"
 readme = "README.md"
 license = "MIT"
-license-file = "LICENSE"
 keywords = ["math", "vector", "vector3", "3d"]
 categories = ["data-structures", "graphics", "mathematics"]
 
