@@ -71,9 +71,21 @@ where
     /// println!("Are v1 and v2 approximately equal? {}", is_approx_equal);
     /// ```
     pub fn fuzzy_equal(&self, target: &Self, epsilon: f64) -> bool {
-        (self.x - target.x).abs().to_f64().unwrap() <= epsilon
-            && (self.y - target.y).abs().to_f64().unwrap() <= epsilon
-            && (self.z - target.z).abs().to_f64().unwrap() <= epsilon
+        (self.x - target.x)
+            .abs()
+            .to_f64()
+            .expect("f64 should handle all values")
+            <= epsilon
+            && (self.y - target.y)
+                .abs()
+                .to_f64()
+                .expect("f64 should handle all values")
+                <= epsilon
+            && (self.z - target.z)
+                .abs()
+                .to_f64()
+                .expect("f64 should handle all values")
+                <= epsilon
     }
 
     /// Linearly interpolates between this vector and another vector by a given ratio.
@@ -117,7 +129,7 @@ impl<T: Vector3Coordinate> Vector3<T> {
     /// Computes the magnitude (length) of the vector.
     pub fn magnitude(&self) -> f64 {
         let mag2 = self.x * self.x + self.y * self.y + self.z * self.z;
-        mag2.to_f64().unwrap().sqrt()
+        mag2.to_f64().expect("f64 should handle all values").sqrt()
     }
 
     /// Computes the dot product between this vector and another vector.
@@ -152,7 +164,10 @@ impl<T: Vector3Coordinate> Vector3<T> {
 
     /// Computes the angle in radians between this vector and another vector.
     pub fn angle(&self, target: &Self) -> f64 {
-        let dot_product = self.dot(target).to_f64().unwrap();
+        let dot_product = self
+            .dot(target)
+            .to_f64()
+            .expect("f64 should handle all values");
         let magnitude_product = self.magnitude() * target.magnitude();
         (dot_product / magnitude_product).acos()
     }
