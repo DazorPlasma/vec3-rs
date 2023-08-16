@@ -1,10 +1,10 @@
 #![deny(unsafe_code, warnings, clippy::all)]
 
-use crate::Vector3;
+use crate::{Vector3, Vector3Coordinate};
 use thiserror::Error;
 
-impl From<(f64, f64, f64)> for Vector3 {
-    fn from(value: (f64, f64, f64)) -> Self {
+impl<T: Vector3Coordinate> From<(T, T, T)> for Vector3<T> {
+    fn from(value: (T, T, T)) -> Self {
         Vector3 {
             x: value.0,
             y: value.1,
@@ -13,14 +13,14 @@ impl From<(f64, f64, f64)> for Vector3 {
     }
 }
 
-impl From<Vector3> for (f64, f64, f64) {
-    fn from(value: Vector3) -> Self {
+impl<T: Vector3Coordinate> From<Vector3<T>> for (T, T, T) {
+    fn from(value: Vector3<T>) -> Self {
         (value.x, value.y, value.z)
     }
 }
 
-impl From<[f64; 3]> for Vector3 {
-    fn from(value: [f64; 3]) -> Self {
+impl<T: Vector3Coordinate> From<[T; 3]> for Vector3<T> {
+    fn from(value: [T; 3]) -> Self {
         Vector3 {
             x: value[0],
             y: value[1],
@@ -29,8 +29,8 @@ impl From<[f64; 3]> for Vector3 {
     }
 }
 
-impl From<Vector3> for [f64; 3] {
-    fn from(value: Vector3) -> Self {
+impl<T: Vector3Coordinate> From<Vector3<T>> for [T; 3] {
+    fn from(value: Vector3<T>) -> Self {
         [value.x, value.y, value.z]
     }
 }
@@ -41,13 +41,11 @@ pub enum ParseVector3Error {
     ParseNumberError(#[from] std::num::ParseFloatError),
     #[error("invalid format")]
     InvalidFormat,
-    #[error("invalid Vec<f64>")]
+    #[error("invalid Vec<Number>")]
     InvalidVec,
-    #[error("vector cannot contain NaN")]
-    ContainsNan,
 }
 
-impl TryFrom<&str> for Vector3 {
+impl TryFrom<&str> for Vector3<f64> {
     type Error = ParseVector3Error;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         if value.len() < 14 {
@@ -68,13 +66,13 @@ impl TryFrom<&str> for Vector3 {
     }
 }
 
-impl TryFrom<Vec<f64>> for Vector3 {
+impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
     type Error = ParseVector3Error;
-    fn try_from(value: Vec<f64>) -> Result<Self, Self::Error> {
+    fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
         let x = value.first().ok_or(ParseVector3Error::InvalidVec)?;
         let y = value.get(1).ok_or(ParseVector3Error::InvalidVec)?;
         let z = value.get(2).ok_or(ParseVector3Error::InvalidVec)?;
 
-        Vector3::new(*x, *y, *z).ok_or(ParseVector3Error::ContainsNan)
+        Ok(Vector3::new(*x, *y, *z))
     }
 }

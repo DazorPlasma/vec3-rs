@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "A simple 3D vector math library"
 repository = "https://github.com/DazorPlasma/vec3-rs"
@@ -15,5 +15,6 @@ categories = ["data-structures", "graphics", "mathematics"]
 lto = true
 
 [dependencies]
+num = "0.4.1"
 rand = "0.8.5"
 thiserror = "1.0.44"
