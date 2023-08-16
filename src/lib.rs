@@ -21,22 +21,18 @@ pub struct Vector3 {
 impl Vector3 {
     /// Creates a new Vector3 with the specified coordinates.
     ///
-    /// # Panics
-    ///
-    /// Panics if any of the coordinates is NaN.
-    ///
     /// # Examples
     ///
     /// ```
     /// use vec3_rs::Vector3;
     ///
-    /// let v = Vector3::new(1.0, 2.0, 3.0);
+    /// let vector3 = Vector3::new(1.0, 2.0, 3.0).unwrap();
     /// ```
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(x: f64, y: f64, z: f64) -> Option<Self> {
         if x.is_nan() || y.is_nan() || z.is_nan() {
-            panic!("Vector3 cannot have NaN coordinates!");
+            return None;
         }
-        Vector3 { x, y, z }
+        Some(Vector3 { x, y, z })
     }
 
     // Constructors for creating Vector3 instances from different types
@@ -152,8 +148,8 @@ impl Vector3 {
     /// ```
     /// use vec3_rs::Vector3;
     ///
-    /// let v1 = Vector3::new(0.1, 0.2, 0.3);
-    /// let v2 = Vector3::new(0.101, 0.199, 0.299);
+    /// let v1 = Vector3::new(0.1, 0.2, 0.3).unwrap();
+    /// let v2 = Vector3::new(0.101, 0.199, 0.299).unwrap();
     ///
     /// let epsilon = 0.01;
     /// let is_approx_equal = v1.fuzzy_equal(&v2, epsilon);
@@ -200,7 +196,7 @@ mod tests {
 
     #[test]
     fn create() {
-        let my_vec = Vector3::new(1.3, 0.0, -5.35501);
+        let my_vec = Vector3::new(1.3, 0.0, -5.35501).expect("expected to create a vector");
         assert_eq!(my_vec.get_x(), 1.3);
         assert_eq!(my_vec.get_y(), 0.0);
         assert_eq!(my_vec.get_z(), -5.35501);
@@ -208,68 +204,90 @@ mod tests {
 
     #[test]
     fn sum() {
-        let vec1 = Vector3::new(1.0, 2.0, 3.0);
-        let vec2 = Vector3::new(5.0, 0.0, -1.0);
-        assert_eq!(vec1 + vec2, Vector3::new(6.0, 2.0, 2.0));
+        let vec1 = Vector3::new(1.0, 2.0, 3.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(5.0, 0.0, -1.0).expect("expected to create a vector");
+        assert_eq!(
+            vec1 + vec2,
+            Vector3::new(6.0, 2.0, 2.0).expect("expected to create a vector")
+        );
     }
 
     #[test]
     fn normalization() {
-        let mut test_vec = Vector3::new(1.0, 2.3, 100.123);
+        let mut test_vec = Vector3::new(1.0, 2.3, 100.123).expect("expected to create a vector");
         test_vec.normalize();
         assert_eq!(
             test_vec,
             Vector3::new(0.00998458316076644, 0.02296454126976281, 0.9996864198054183)
+                .expect("expected to create a vector")
         );
         assert!((1.0 - test_vec.magnitude()).abs() < 0.00000001);
     }
 
     #[test]
     fn lerp() {
-        let start = Vector3::new(0.0, 0.0, 0.0);
-        let end = Vector3::new(1.0, 2.0, 3.0);
+        let start = Vector3::new(0.0, 0.0, 0.0).expect("expected to create a vector");
+        let end = Vector3::new(1.0, 2.0, 3.0).expect("expected to create a vector");
         let lerp_result = start.lerp(&end, 0.75);
-        assert_eq!(lerp_result, Vector3::new(0.75, 1.5, 2.25));
+        assert_eq!(
+            lerp_result,
+            Vector3::new(0.75, 1.5, 2.25).expect("expected to create a vector")
+        );
     }
 
     #[test]
     fn dot_product() {
-        let vec1 = Vector3::new(1.0, 2.0, 3.0);
-        let vec2 = Vector3::new(5.0, 0.0, -1.0);
+        let vec1 = Vector3::new(1.0, 2.0, 3.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(5.0, 0.0, -1.0).expect("expected to create a vector");
         let dot_result = vec1.dot(&vec2);
         assert_eq!(dot_result, 2.0);
     }
 
     #[test]
     fn cross_product() {
-        let vec1 = Vector3::new(1.0, 0.0, 0.0);
-        let vec2 = Vector3::new(0.0, 1.0, 0.0);
+        let vec1 = Vector3::new(1.0, 0.0, 0.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(0.0, 1.0, 0.0).expect("expected to create a vector");
         let cross_result = vec1.cross(&vec2);
-        assert_eq!(cross_result, Vector3::new(0.0, 0.0, 1.0));
+        assert_eq!(
+            cross_result,
+            Vector3::new(0.0, 0.0, 1.0).expect("expected to create a vector")
+        );
     }
 
     #[test]
     fn max_components() {
-        let vec1 = Vector3::new(1.0, 5.0, 3.0);
-        let vec2 = Vector3::new(3.0, 2.0, 4.0);
+        let vec1 = Vector3::new(1.0, 5.0, 3.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(3.0, 2.0, 4.0).expect("expected to create a vector");
         let max_result = vec1.max(&vec2);
-        assert_eq!(max_result, Vector3::new(3.0, 5.0, 4.0));
+        assert_eq!(
+            max_result,
+            Vector3::new(3.0, 5.0, 4.0).expect("expected to create a vector")
+        );
     }
 
     #[test]
     fn min_components() {
-        let vec1 = Vector3::new(1.0, 5.0, 3.0);
-        let vec2 = Vector3::new(3.0, 2.0, 4.0);
+        let vec1 = Vector3::new(1.0, 5.0, 3.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(3.0, 2.0, 4.0).expect("expected to create a vector");
         let min_result = vec1.min(&vec2);
-        assert_eq!(min_result, Vector3::new(1.0, 2.0, 3.0));
+        assert_eq!(
+            min_result,
+            Vector3::new(1.0, 2.0, 3.0).expect("expected to create a vector")
+        );
     }
 
     #[test]
     fn fuzzy_equality() {
-        let vec1 = Vector3::new(1.0, 2.0, 3.0);
-        let vec2 = Vector3::new(1.01, 1.99, 3.01);
+        let vec1 = Vector3::new(1.0, 2.0, 3.0).expect("expected to create a vector");
+        let vec2 = Vector3::new(1.01, 1.99, 3.01).expect("expected to create a vector");
         let epsilon = 0.02;
         let fuzzy_equal_result = vec1.fuzzy_equal(&vec2, epsilon);
         assert!(fuzzy_equal_result);
+    }
+    #[test]
+    #[should_panic(expected = "Division assignment resulted in NaN!")]
+    fn nan_panic() {
+        let mut vec1 = Vector3::default();
+        vec1 /= std::f64::NAN;
     }
 }

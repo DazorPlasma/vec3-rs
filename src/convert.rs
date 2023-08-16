@@ -43,6 +43,8 @@ pub enum ParseVector3Error {
     InvalidFormat,
     #[error("invalid Vec<f64>")]
     InvalidVec,
+    #[error("vector cannot contain NaN")]
+    ContainsNan,
 }
 
 impl TryFrom<&str> for Vector3 {
@@ -73,6 +75,6 @@ impl TryFrom<Vec<f64>> for Vector3 {
         let y = value.get(1).ok_or(ParseVector3Error::InvalidVec)?;
         let z = value.get(2).ok_or(ParseVector3Error::InvalidVec)?;
 
-        Ok(Vector3::new(*x, *y, *z))
+        Vector3::new(*x, *y, *z).ok_or(ParseVector3Error::ContainsNan)
     }
 }
