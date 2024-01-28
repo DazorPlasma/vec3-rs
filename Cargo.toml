@@ -7,7 +7,7 @@ repository = "https://github.com/DazorPlasma/vec3-rs"
 authors = ["dazor"]
 documentation = "https://docs.rs/vec3-rs"
 readme = "README.md"
-license = "MIT"
+license = "LICENSE"
 keywords = ["math", "vector", "vector3", "3d"]
 categories = ["data-structures", "graphics", "mathematics"]
 
