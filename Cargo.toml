@@ -1,18 +1,21 @@
 [package]
 name = "vec3-rs"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 description = "A simple 3D vector math library"
 repository = "https://github.com/DazorPlasma/vec3-rs"
 authors = ["dazor"]
 documentation = "https://docs.rs/vec3-rs"
 readme = "README.md"
-license = "MIT"
+license = "LICENSE"
 keywords = ["math", "vector", "vector3", "3d"]
 categories = ["data-structures", "graphics", "mathematics"]
 
 [profile.release]
 lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
 
 [dependencies]
 num = "0.4.1"

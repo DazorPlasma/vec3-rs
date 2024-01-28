@@ -178,17 +178,17 @@ impl<T: Vector3Coordinate> Vector3<T> {
     }
 
     /// Retrieves the X component of the vector.
-    pub fn get_x(&self) -> T {
+    pub const fn get_x(&self) -> T {
         self.x
     }
 
     /// Retrieves the Y component of the vector.
-    pub fn get_y(&self) -> T {
+    pub const fn get_y(&self) -> T {
         self.y
     }
 
     /// Retrieves the Z component of the vector.
-    pub fn get_z(&self) -> T {
+    pub const fn get_z(&self) -> T {
         self.z
     }
 }
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn angle() {
-        let angle = 1.5707963267948966;
+        let angle = std::f64::consts::PI / 2.0;
         let calc_angle = consts::X_AXIS.angle(&consts::Y_AXIS);
         assert_eq!(calc_angle, angle);
     }
