@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 pub trait Lerp<T: num::Float> {
     /// Performs linear interpolation between `self` and `goal` based on the given `alpha`.
     ///

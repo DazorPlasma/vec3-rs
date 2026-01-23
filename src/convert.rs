@@ -5,7 +5,7 @@ use thiserror::Error;
 
 impl<T: Vector3Coordinate> From<(T, T, T)> for Vector3<T> {
     fn from(value: (T, T, T)) -> Self {
-        Vector3 {
+        Self {
             x: value.0,
             y: value.1,
             z: value.2,
@@ -21,11 +21,8 @@ impl<T: Vector3Coordinate> From<Vector3<T>> for (T, T, T) {
 
 impl<T: Vector3Coordinate> From<[T; 3]> for Vector3<T> {
     fn from(value: [T; 3]) -> Self {
-        Vector3 {
-            x: value[0],
-            y: value[1],
-            z: value[2],
-        }
+        let [x, y, z] = value;
+        Self { x, y, z }
     }
 }
 
@@ -40,20 +37,20 @@ pub enum ParseVector3Error {
     #[error("failed to parse numbers")]
     ParseNumberError(#[from] std::num::ParseFloatError),
     #[error("invalid format")]
-    InvalidFormat,
-    #[error("invalid Vec<Number>")]
-    InvalidVec,
+    InvalidStringFormat,
+    #[error("invalid vector length: expected 3, got {0}")]
+    InvalidVec(usize),
 }
 
 impl TryFrom<&str> for Vector3<f64> {
     type Error = ParseVector3Error;
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         if value.len() < 14 {
-            return Err(ParseVector3Error::InvalidFormat);
+            return Err(ParseVector3Error::InvalidStringFormat);
         }
 
         if &value[..8] != "Vector3(" || !value.ends_with(')') {
-            return Err(ParseVector3Error::InvalidFormat);
+            return Err(ParseVector3Error::InvalidStringFormat);
         }
 
         let data = &value[8..value.len() - 1];
@@ -62,17 +59,16 @@ impl TryFrom<&str> for Vector3<f64> {
             new_vector[index] = coord.trim().parse::<f64>()?;
         }
 
-        Ok(Vector3::from(new_vector))
+        Ok(Self::from(new_vector))
     }
 }
 
-impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
+impl<T: Vector3Coordinate + std::fmt::Debug> TryFrom<Vec<T>> for Vector3<T> {
     type Error = ParseVector3Error;
     fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
-        let x = value.first().ok_or(ParseVector3Error::InvalidVec)?;
-        let y = value.get(1).ok_or(ParseVector3Error::InvalidVec)?;
-        let z = value.get(2).ok_or(ParseVector3Error::InvalidVec)?;
-
-        Ok(Vector3::new(*x, *y, *z))
+        let array: [T; 3] = value
+            .try_into()
+            .map_err(|v: Vec<T>| ParseVector3Error::InvalidVec(v.len()))?;
+        Ok(Self::from(array))
     }
 }

@@ -1,4 +1,9 @@
-#![deny(unsafe_code, warnings, clippy::all)]
+#![deny(unsafe_code)]
+// #![deny(warnings)]
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![deny(clippy::cargo)]
+#![allow(clippy::cast_possible_truncation)]
 
 pub mod consts;
 mod convert;
@@ -6,37 +11,37 @@ mod float_lerp;
 mod ops;
 
 use float_lerp::Lerp;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 
 pub trait Vector3Coordinate:
     num::Num
     + num::ToPrimitive
     + PartialOrd
     + std::fmt::Display
-    + std::fmt::Debug
     + std::ops::AddAssign
     + std::ops::SubAssign
     + std::ops::MulAssign
     + std::ops::DivAssign
     + Clone
-    + Copy
 {
 }
-impl Vector3Coordinate for f64 {}
-impl Vector3Coordinate for f32 {}
-impl Vector3Coordinate for i8 {}
-impl Vector3Coordinate for i16 {}
-impl Vector3Coordinate for i32 {}
-impl Vector3Coordinate for i64 {}
-impl Vector3Coordinate for i128 {}
-impl Vector3Coordinate for u8 {}
-impl Vector3Coordinate for u16 {}
-impl Vector3Coordinate for u32 {}
-impl Vector3Coordinate for u64 {}
-impl Vector3Coordinate for u128 {}
+
+impl<T> Vector3Coordinate for T where
+    T: num::Num
+        + num::ToPrimitive
+        + PartialOrd
+        + std::fmt::Display
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign
+        + Clone
+{
+}
 
 /// Represents a vector in 3D space.
-#[derive(Debug, PartialOrd, PartialEq, Default, Clone, Copy)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Debug, PartialEq, Default, Clone, Copy)]
 pub struct Vector3<T: Vector3Coordinate> {
     x: T,
     y: T,
@@ -45,18 +50,26 @@ pub struct Vector3<T: Vector3Coordinate> {
 
 impl<T: Vector3Coordinate + num::Float> Vector3<T>
 where
-    rand::distributions::Standard: rand::prelude::Distribution<T>,
+    rand::distr::StandardUniform: rand::prelude::Distribution<T>,
 {
     /// Generates a random Vector3 with components in the range [0.0, 1.0).
+    #[must_use]
     pub fn random() -> Self {
-        Vector3 {
-            x: thread_rng().gen(),
-            y: thread_rng().gen(),
-            z: thread_rng().gen(),
+        let mut thread = rand::rng();
+        Self {
+            x: thread.random(),
+            y: thread.random(),
+            z: thread.random(),
         }
     }
+}
 
+impl<T: Vector3Coordinate + num::Float> Vector3<T> {
     /// Checks if this vector is approximately equal to another vector within a given epsilon.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `epsilon` is negative.
     ///
     /// # Examples
     ///
@@ -70,45 +83,60 @@ where
     /// let is_approx_equal = v1.fuzzy_equal(&v2, epsilon);
     /// println!("Are v1 and v2 approximately equal? {}", is_approx_equal);
     /// ```
-    pub fn fuzzy_equal(&self, target: &Self, epsilon: f64) -> bool {
-        (self.x - target.x)
-            .abs()
-            .to_f64()
-            .expect("f64 should handle all values")
-            <= epsilon
-            && (self.y - target.y)
-                .abs()
-                .to_f64()
-                .expect("f64 should handle all values")
-                <= epsilon
-            && (self.z - target.z)
-                .abs()
-                .to_f64()
-                .expect("f64 should handle all values")
-                <= epsilon
+    #[must_use]
+    #[inline]
+    pub fn fuzzy_equal(&self, target: &Self, epsilon: T) -> bool {
+        assert!(epsilon.is_sign_positive());
+        // unrolled for performance
+        (self.x - target.x).abs() <= epsilon
+            && (self.y - target.y).abs() <= epsilon
+            && (self.z - target.z).abs() <= epsilon
     }
 
     /// Linearly interpolates between this vector and another vector by a given ratio.
+    #[must_use]
+    #[inline]
     pub fn lerp(&self, target: &Self, alpha: T) -> Self {
-        Vector3 {
+        Self {
             x: self.x.lerp(target.x, alpha),
             y: self.y.lerp(target.y, alpha),
             z: self.z.lerp(target.z, alpha),
         }
     }
-}
 
-impl Vector3<f64> {
+    /// Computes the magnitude (length) of the vector.
+    #[must_use]
+    #[inline]
+    pub fn magnitude(&self) -> T {
+        let mag2 = self.x * self.x + self.y * self.y + self.z * self.z;
+        mag2.sqrt()
+    }
+
+    /// Computes the angle in radians between this vector and another vector.
+    #[must_use]
+    #[inline]
+    pub fn angle(&self, target: &Self) -> T {
+        let dot_product = self.dot(target);
+        let magnitude_product = self.magnitude() * target.magnitude();
+        (dot_product / magnitude_product).acos()
+    }
+
+    /// Computes the angle in degrees between this vector and another vector.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `T`, the vector's datatype, cannot be converted to a f64.
+    #[must_use]
+    #[inline]
+    pub fn angle_deg(&self, target: &Self) -> T {
+        const COEFF: f64 = 180.0 / std::f64::consts::PI;
+        self.angle(target) * T::from(COEFF).unwrap()
+    }
+
     /// Scales the vector such that its magnitude becomes 1.
+    #[inline]
     pub fn normalize(&mut self) {
         *self /= self.magnitude();
-    }
-}
-
-impl Vector3<f32> {
-    /// Scales the vector such that its magnitude becomes 1.
-    pub fn normalize(&mut self) {
-        *self /= self.magnitude() as f32;
     }
 }
 
@@ -122,74 +150,87 @@ impl<T: Vector3Coordinate> Vector3<T> {
     ///
     /// let vector3 = Vector3::new(1.0, 2.0, 3.0);
     /// ```
-    pub fn new(x: T, y: T, z: T) -> Self {
-        Vector3 { x, y, z }
-    }
-
-    /// Computes the magnitude (length) of the vector.
-    pub fn magnitude(&self) -> f64 {
-        let mag2 = self.x * self.x + self.y * self.y + self.z * self.z;
-        mag2.to_f64().expect("f64 should handle all values").sqrt()
+    pub const fn new(x: T, y: T, z: T) -> Self {
+        Self { x, y, z }
     }
 
     /// Computes the dot product between this vector and another vector.
+    #[must_use]
+    #[inline]
     pub fn dot(&self, target: &Self) -> T {
-        self.x * target.x + self.y * target.y + self.z * target.z
+        self.x.clone() * target.x.clone()
+            + self.y.clone() * target.y.clone()
+            + self.z.clone() * target.z.clone()
     }
 
     /// Computes the cross product between this vector and another vector.
+    #[must_use]
+    #[inline]
     pub fn cross(&self, target: &Self) -> Self {
-        Vector3 {
-            x: self.y * target.z - self.z * target.y,
-            y: self.z * target.x - self.x * target.z,
-            z: self.x * target.y - self.y * target.x,
+        Self {
+            x: self.y.clone() * target.z.clone() - self.z.clone() * target.y.clone(),
+            y: self.z.clone() * target.x.clone() - self.x.clone() * target.z.clone(),
+            z: self.x.clone() * target.y.clone() - self.y.clone() * target.x.clone(),
         }
     }
 
     /// Computes the component-wise maximum of this vector and another vector.
+    #[must_use]
+    #[inline]
     pub fn max(&self, target: &Self) -> Self {
-        let x = if self.x > target.x { self.x } else { target.x };
-        let y = if self.y > target.y { self.y } else { target.y };
-        let z = if self.z > target.z { self.z } else { target.z };
-        Vector3 { x, y, z }
+        let x = if self.x > target.x {
+            self.x.clone()
+        } else {
+            target.x.clone()
+        };
+        let y = if self.y > target.y {
+            self.y.clone()
+        } else {
+            target.y.clone()
+        };
+        let z = if self.z > target.z {
+            self.z.clone()
+        } else {
+            target.z.clone()
+        };
+        Self { x, y, z }
     }
 
     /// Computes the component-wise minimum of this vector and another vector.
+    #[must_use]
+    #[inline]
     pub fn min(&self, target: &Self) -> Self {
-        let x = if self.x < target.x { self.x } else { target.x };
-        let y = if self.y < target.y { self.y } else { target.y };
-        let z = if self.z < target.z { self.z } else { target.z };
-        Vector3 { x, y, z }
-    }
-
-    /// Computes the angle in radians between this vector and another vector.
-    pub fn angle(&self, target: &Self) -> f64 {
-        let dot_product = self
-            .dot(target)
-            .to_f64()
-            .expect("f64 should handle all values");
-        let magnitude_product = self.magnitude() * target.magnitude();
-        (dot_product / magnitude_product).acos()
-    }
-
-    /// Computes the angle in degrees between this vector and another vector.
-    pub fn angle_deg(&self, target: &Self) -> f64 {
-        self.angle(target) * (180.0 / std::f64::consts::PI)
+        let x = if self.x < target.x {
+            self.x.clone()
+        } else {
+            target.x.clone()
+        };
+        let y = if self.y < target.y {
+            self.y.clone()
+        } else {
+            target.y.clone()
+        };
+        let z = if self.z < target.z {
+            self.z.clone()
+        } else {
+            target.z.clone()
+        };
+        Self { x, y, z }
     }
 
     /// Retrieves the X component of the vector.
-    pub const fn get_x(&self) -> T {
-        self.x
+    pub const fn x(&self) -> &T {
+        &self.x
     }
 
     /// Retrieves the Y component of the vector.
-    pub const fn get_y(&self) -> T {
-        self.y
+    pub const fn y(&self) -> &T {
+        &self.y
     }
 
     /// Retrieves the Z component of the vector.
-    pub const fn get_z(&self) -> T {
-        self.z
+    pub const fn z(&self) -> &T {
+        &self.z
     }
 }
 
@@ -202,20 +243,21 @@ impl<T: Vector3Coordinate> std::fmt::Display for Vector3<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ops::Sub;
 
     #[test]
     fn angle() {
         let angle = std::f64::consts::PI / 2.0;
-        let calc_angle = consts::X_AXIS.angle(&consts::Y_AXIS);
-        assert_eq!(calc_angle, angle);
+        let calc_angle = Vector3::<f64>::x_axis().angle(&Vector3::<f64>::y_axis());
+        assert!(calc_angle.sub(angle) <= f64::EPSILON);
     }
 
     #[test]
     fn create() {
-        let my_vec = Vector3::new(1.3, 0.0, -5.35501);
-        assert_eq!(my_vec.get_x(), 1.3);
-        assert_eq!(my_vec.get_y(), 0.0);
-        assert_eq!(my_vec.get_z(), -5.35501);
+        let my_vec: Vector3<f64> = Vector3::new(1.3, 0.0, -5.35501);
+        assert!((my_vec.x() - 1.3f64).abs() <= f64::EPSILON);
+        assert!((my_vec.y() - 0.0f64).abs() <= f64::EPSILON);
+        assert!((my_vec.z() - -5.35501f64).abs() <= f64::EPSILON);
     }
 
     #[test]
@@ -231,9 +273,13 @@ mod tests {
         test_vec.normalize();
         assert_eq!(
             test_vec,
-            Vector3::new(0.00998458316076644, 0.02296454126976281, 0.9996864198054183)
+            Vector3::new(
+                0.009_984_583_160_766_44,
+                0.022_964_541_269_762_81,
+                0.999_686_419_805_418_3
+            )
         );
-        assert!((1.0 - test_vec.magnitude()).abs() < 0.00000001);
+        assert!((1.0 - test_vec.magnitude()).abs() <= f64::EPSILON);
     }
 
     #[test]
@@ -249,7 +295,7 @@ mod tests {
         let vec1 = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
         let dot_result = vec1.dot(&vec2);
-        assert_eq!(dot_result, 2.0);
+        assert!((dot_result - 2.0f64).abs() <= f64::EPSILON);
     }
 
     #[test]
@@ -284,11 +330,13 @@ mod tests {
         let fuzzy_equal_result = vec1.fuzzy_equal(&vec2, epsilon);
         assert!(fuzzy_equal_result);
     }
+
     #[test]
     fn nan_dont_panic() {
         let mut vec1: Vector3<f64> = Vector3::default();
-        vec1 /= std::f64::NAN;
+        vec1 /= f64::NAN;
     }
+
     #[test]
     fn readme_example() {
         let mut v1: Vector3<f64> = Vector3::new(1.0, 2.0, 3.0);

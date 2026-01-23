@@ -1,48 +1,58 @@
-#![allow(unused)]
+use crate::{Vector3, Vector3Coordinate};
 
-use crate::Vector3;
+impl<T: Vector3Coordinate> Vector3<T> {
+    /// Unit vector along the X-axis.
+    #[must_use]
+    #[inline]
+    pub fn x_axis() -> Self {
+        Self {
+            x: T::one(),
+            y: T::zero(),
+            z: T::zero(),
+        }
+    }
 
-/// Predefined constant vector along the X-axis.
-pub const X_AXIS: Vector3<f64> = Vector3 {
-    x: 1.0,
-    y: 0.0,
-    z: 0.0,
-};
+    /// Unit vector along the Y-axis.
+    #[must_use]
+    #[inline]
+    pub fn y_axis() -> Self {
+        Self {
+            x: T::zero(),
+            y: T::one(),
+            z: T::zero(),
+        }
+    }
 
-/// Predefined constant vector along the Y-axis.
-pub const Y_AXIS: Vector3<f64> = Vector3 {
-    x: 0.0,
-    y: 1.0,
-    z: 0.0,
-};
+    /// Unit vector along the Z-axis.
+    #[must_use]
+    #[inline]
+    pub fn z_axis() -> Self {
+        Self {
+            x: T::zero(),
+            y: T::zero(),
+            z: T::one(),
+        }
+    }
 
-/// Predefined constant vector along the Z-axis.
-pub const Z_AXIS: Vector3<f64> = Vector3 {
-    x: 0.0,
-    y: 0.0,
-    z: 1.0,
-};
+    /// Vector with all components set to 1.
+    #[must_use]
+    #[inline]
+    pub fn one() -> Self {
+        Self {
+            x: T::one(),
+            y: T::one(),
+            z: T::one(),
+        }
+    }
 
-/// Predefined constant zero vector.
-pub const VECTOR3_ZERO: Vector3<f64> = Vector3 {
-    x: 0.0,
-    y: 0.0,
-    z: 0.0,
-};
-
-/// Predefined constant unit vector.
-pub const VECTOR3_ONE: Vector3<f64> = Vector3 {
-    x: 1.0,
-    y: 1.0,
-    z: 1.0,
-};
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn const_sum() {
-        let one = VECTOR3_ONE;
-        assert_eq!(one, VECTOR3_ZERO + X_AXIS + Y_AXIS + Z_AXIS);
+    /// Vector with all components set to 0.
+    #[must_use]
+    #[inline]
+    pub fn zero() -> Self {
+        Self {
+            x: T::zero(),
+            y: T::zero(),
+            z: T::zero(),
+        }
     }
 }
