@@ -1,19 +1,10 @@
 # vec3-rs
 
-https://crates.io/crates/vec3-rs
-
-This crate provides a simple and efficient implementation of 3D vectors in Rust, with various utility functions for vector manipulation and operations.
-
-## Features
-
-- Represents 3D vectors in Cartesian space.
-- Includes predefined constant vectors for X, Y, and Z axes.
-- Supports basic vector operations such as addition, subtraction, dot product, cross product, etc.
-- Supports all primitive number types.
-- Provides methods for vector normalization, linear interpolation, and angle calculations.
-- Allows fuzzy equality comparison within a specified epsilon.
+This crate provides a simple implementation of 3D vectors in Rust.
+Supports any numeric type trough num-traits.
 
 ## Example
+
 ```rust
 use vec3_rs::Vector3;
 

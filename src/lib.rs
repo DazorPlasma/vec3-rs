@@ -14,8 +14,8 @@ use float_lerp::Lerp;
 use rand::Rng;
 
 pub trait Vector3Coordinate:
-    num::Num
-    + num::ToPrimitive
+    num_traits::Num
+    + num_traits::ToPrimitive
     + PartialOrd
     + std::fmt::Display
     + std::ops::AddAssign
@@ -27,8 +27,8 @@ pub trait Vector3Coordinate:
 }
 
 impl<T> Vector3Coordinate for T where
-    T: num::Num
-        + num::ToPrimitive
+    T: num_traits::Num
+        + num_traits::ToPrimitive
         + PartialOrd
         + std::fmt::Display
         + std::ops::AddAssign
@@ -48,7 +48,7 @@ pub struct Vector3<T: Vector3Coordinate> {
     z: T,
 }
 
-impl<T: Vector3Coordinate + num::Float> Vector3<T>
+impl<T: Vector3Coordinate + num_traits::Float> Vector3<T>
 where
     rand::distr::StandardUniform: rand::prelude::Distribution<T>,
 {
@@ -64,7 +64,7 @@ where
     }
 }
 
-impl<T: Vector3Coordinate + num::Float> Vector3<T> {
+impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Checks if this vector is approximately equal to another vector within a given epsilon.
     ///
     /// # Panics

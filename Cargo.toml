@@ -1,23 +1,19 @@
 [package]
 name = "vec3-rs"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
-description = "A simple 3D vector math library"
+description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
 authors = ["dazor"]
 documentation = "https://docs.rs/vec3-rs"
 readme = "README.md"
-license-file = "LICENSE"
 license = "MIT"
-keywords = ["math", "vector", "vector3", "3d"]
+keywords = ["math", "vector", "geometry", "3d"]
 categories = ["data-structures", "graphics", "mathematics"]
+rust-version = "1.78.0"
 
-[profile.release]
-lto = true
-opt-level = 3
-codegen-units = 1
 
 [dependencies]
-num = "0.4.3"
+num-traits = "0.2.19"
 rand = "0.9.2"
 thiserror = "2.0.18"

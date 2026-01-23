@@ -1,4 +1,4 @@
-pub trait Lerp<T: num::Float> {
+pub trait Lerp<T: num_traits::Float> {
     /// Performs linear interpolation between `self` and `goal` based on the given `alpha`.
     ///
     /// The `alpha` parameter should be a float between 0.0 and 1.0. A value of 0.0 results in the same
@@ -16,7 +16,7 @@ pub trait Lerp<T: num::Float> {
     fn lerp(&self, goal: T, alpha: T) -> T;
 }
 
-impl<T: num::Float> Lerp<T> for T {
+impl<T: num_traits::Float> Lerp<T> for T {
     fn lerp(&self, goal: T, alpha: T) -> T {
         *self + (goal - *self) * alpha
     }
