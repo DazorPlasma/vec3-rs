@@ -11,6 +11,8 @@ mod float_lerp;
 mod ops;
 
 use float_lerp::Lerp;
+use num_traits::clamp;
+#[cfg(feature = "random")]
 use rand::Rng;
 
 pub trait Vector3Coordinate:
@@ -41,27 +43,11 @@ impl<T> Vector3Coordinate for T where
 
 /// Represents a vector in 3D space.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Debug, PartialEq, Default, Clone, Copy)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Vector3<T: Vector3Coordinate> {
     x: T,
     y: T,
     z: T,
-}
-
-impl<T: Vector3Coordinate + num_traits::Float> Vector3<T>
-where
-    rand::distr::StandardUniform: rand::prelude::Distribution<T>,
-{
-    /// Generates a random Vector3 with components in the range [0.0, 1.0).
-    #[must_use]
-    pub fn random() -> Self {
-        let mut thread = rand::rng();
-        Self {
-            x: thread.random(),
-            y: thread.random(),
-            z: thread.random(),
-        }
-    }
 }
 
 impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
@@ -137,6 +123,179 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     #[inline]
     pub fn normalize(&mut self) {
         *self /= self.magnitude();
+    }
+
+    /// Computes the squared magnitude of the vector.
+    #[must_use]
+    #[inline]
+    pub fn magnitude_squared(&self) -> T {
+        self.dot(self)
+    }
+
+    /// Computes the distance between this vector and another vector.
+    #[must_use]
+    #[inline]
+    pub fn distance(&self, target: &Self) -> T {
+        (self - target).magnitude()
+    }
+
+    /// Computes the squared distance between this vector and another vector.
+    #[must_use]
+    #[inline]
+    pub fn distance_squared(&self, target: &Self) -> T {
+        (self - target).magnitude_squared()
+    }
+
+    /// Projects this vector onto another vector.
+    #[must_use]
+    #[inline]
+    pub fn project(&self, on_normal: &Self) -> Self {
+        on_normal * (self.dot(on_normal) / on_normal.magnitude_squared())
+    }
+
+    /// Rejects this vector from another vector.
+    #[must_use]
+    #[inline]
+    pub fn reject(&self, on_normal: &Self) -> Self {
+        self - &self.project(on_normal)
+    }
+
+    /// Reflects this vector off a surface defined by a normal.
+    #[must_use]
+    #[inline]
+    pub fn reflect(&self, normal: &Self) -> Self {
+        let two = T::one() + T::one();
+        self - &(normal * (self.dot(normal) * two))
+    }
+
+    /// Slides the vector along a plane defined by a normal.
+    #[must_use]
+    #[inline]
+    pub fn slide(&self, normal: &Self) -> Self {
+        self - &(normal * self.dot(normal))
+    }
+
+    /// Bounces the vector off a surface defined by a normal.
+    #[must_use]
+    #[inline]
+    pub fn bounce(&self, normal: &Self) -> Self {
+        self.reflect(normal)
+    }
+
+    /// Inverts the components of the vector.
+    #[must_use]
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        let one = T::one();
+        Self {
+            x: one / self.x,
+            y: one / self.y,
+            z: one / self.z,
+        }
+    }
+
+    /// Returns a new vector with the absolute value of each component.
+    #[must_use]
+    #[inline]
+    pub fn abs(&self) -> Self {
+        Self {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+        }
+    }
+
+    /// Returns a new vector with the ceiling of each component.
+    #[must_use]
+    #[inline]
+    pub fn ceil(&self) -> Self {
+        Self {
+            x: self.x.ceil(),
+            y: self.y.ceil(),
+            z: self.z.ceil(),
+        }
+    }
+
+    /// Returns a new vector with the floor of each component.
+    #[must_use]
+    #[inline]
+    pub fn floor(&self) -> Self {
+        Self {
+            x: self.x.floor(),
+            y: self.y.floor(),
+            z: self.z.floor(),
+        }
+    }
+
+    /// Returns a new vector with the rounded value of each component.
+    #[must_use]
+    #[inline]
+    pub fn round(&self) -> Self {
+        Self {
+            x: self.x.round(),
+            y: self.y.round(),
+            z: self.z.round(),
+        }
+    }
+
+    /// Returns a new vector with each component clamped to a given range.
+    #[must_use]
+    #[inline]
+    pub fn clamp(&self, min: T, max: T) -> Self {
+        Self {
+            x: clamp(self.x, min, max),
+            y: clamp(self.y, min, max),
+            z: clamp(self.z, min, max),
+        }
+    }
+
+    /// Rotates the vector around an axis by a given angle in radians.
+    #[must_use]
+    #[inline]
+    pub fn rotated(&self, axis: &Self, angle: T) -> Self {
+        let (sin, cos) = angle.sin_cos();
+        let axis_normalized = axis / axis.magnitude();
+
+        let term1 = self * cos;
+        let term2 = axis_normalized.cross(self) * sin;
+        let term3_scalar = axis_normalized.dot(self) * (T::one() - cos);
+        let term3 = &axis_normalized * term3_scalar;
+
+        term1 + term2 + term3
+    }
+
+    /// Creates a new `Vector3` from spherical coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `radius` - The distance from the origin.
+    /// * `polar` - The polar angle (the angle from the z-axis, in radians).
+    /// * `azimuth` - The azimuth angle (the angle from the x-axis in the xy-plane, in radians).
+    #[must_use]
+    #[inline]
+    pub fn from_spherical(radius: T, polar: T, azimuth: T) -> Self {
+        let (sin_polar, cos_polar) = polar.sin_cos();
+        let (sin_azimuth, cos_azimuth) = azimuth.sin_cos();
+        Self {
+            x: radius * sin_polar * cos_azimuth,
+            y: radius * sin_polar * sin_azimuth,
+            z: radius * cos_polar,
+        }
+    }
+
+    /// Generates a random Vector3 with components in the range [0.0, 1.0).
+    #[cfg(feature = "random")]
+    #[must_use]
+    pub fn random() -> Self
+    where
+        rand::distr::StandardUniform: rand::prelude::Distribution<T>,
+    {
+        let mut thread = rand::rng();
+        Self {
+            x: thread.random(),
+            y: thread.random(),
+            z: thread.random(),
+        }
     }
 }
 
@@ -264,7 +423,7 @@ mod tests {
     fn sum() {
         let vec1 = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
-        assert_eq!(vec1 + vec2, Vector3::new(6.0, 2.0, 2.0));
+        assert_eq!(&vec1 + &vec2, Vector3::new(6.0, 2.0, 2.0));
     }
 
     #[test]
@@ -332,6 +491,124 @@ mod tests {
     }
 
     #[test]
+    fn distance() {
+        let v1 = Vector3::new(1.0, 2.0, 3.0);
+        let v2 = Vector3::new(4.0, 6.0, 8.0);
+        assert!((v1.distance(&v2) - (50.0f64).sqrt()).abs() <= f64::EPSILON);
+    }
+
+    #[test]
+    fn distance_squared() {
+        let v1 = Vector3::new(1.0, 2.0, 3.0);
+        let v2 = Vector3::new(4.0, 6.0, 8.0);
+        assert!((v1.distance_squared(&v2) - 50.0f64).abs() <= f64::EPSILON);
+    }
+
+    #[test]
+    fn project() {
+        let v = Vector3::new(1.0, 2.0, 3.0);
+        let on_normal = Vector3::new(1.0, 0.0, 0.0);
+        let expected = Vector3::new(1.0, 0.0, 0.0);
+        assert_eq!(v.project(&on_normal), expected);
+    }
+
+    #[test]
+    fn reject() {
+        let v = Vector3::new(1.0, 2.0, 3.0);
+        let on_normal = Vector3::new(1.0, 0.0, 0.0);
+        let expected = Vector3::new(0.0, 2.0, 3.0);
+        assert_eq!(v.reject(&on_normal), expected);
+    }
+
+    #[test]
+    fn reflect() {
+        let v = Vector3::new(1.0, -1.0, 0.0);
+        let normal = Vector3::new(0.0, 1.0, 0.0);
+        let expected = Vector3::new(1.0, 1.0, 0.0);
+        assert_eq!(v.reflect(&normal), expected);
+    }
+
+    #[test]
+    fn slide() {
+        let v = Vector3::new(1.0, 1.0, 0.0);
+        let normal = Vector3::new(0.0, 1.0, 0.0);
+        let expected = Vector3::new(1.0, 0.0, 0.0);
+        assert_eq!(v.slide(&normal), expected);
+    }
+
+    #[test]
+    fn bounce() {
+        let v = Vector3::new(1.0, -1.0, 0.0);
+        let normal = Vector3::new(0.0, 1.0, 0.0);
+        let expected = Vector3::new(1.0, 1.0, 0.0);
+        assert_eq!(v.bounce(&normal), expected);
+    }
+
+    #[test]
+    fn inverse() {
+        let v = Vector3::new(2.0, 4.0, 8.0);
+        let expected = Vector3::new(0.5, 0.25, 0.125);
+        assert_eq!(v.inverse(), expected);
+    }
+
+    #[test]
+    fn abs() {
+        let v = Vector3::new(-1.0, -2.0, 3.0);
+        let expected = Vector3::new(1.0, 2.0, 3.0);
+        assert_eq!(v.abs(), expected);
+    }
+
+    #[test]
+    fn ceil() {
+        let v = Vector3::new(1.1, 2.9, 3.0);
+        let expected = Vector3::new(2.0, 3.0, 3.0);
+        assert_eq!(v.ceil(), expected);
+    }
+
+    #[test]
+    fn floor() {
+        let v = Vector3::new(1.1, 2.9, 3.0);
+        let expected = Vector3::new(1.0, 2.0, 3.0);
+        assert_eq!(v.floor(), expected);
+    }
+
+    #[test]
+    fn round() {
+        let v = Vector3::new(1.1, 2.9, 3.5);
+        let expected = Vector3::new(1.0, 3.0, 4.0);
+        assert_eq!(v.round(), expected);
+    }
+
+    #[test]
+    fn clamp() {
+        let v = Vector3::new(0.0, 5.0, 10.0);
+        let min = 1.0;
+        let max = 9.0;
+        let expected = Vector3::new(1.0, 5.0, 9.0);
+        assert_eq!(v.clamp(min, max), expected);
+    }
+
+    #[test]
+    fn rotated() {
+        let v = Vector3::new(1.0, 0.0, 0.0);
+        let axis = Vector3::new(0.0, 0.0, 1.0);
+        let angle = std::f64::consts::FRAC_PI_2;
+        let rotated = v.rotated(&axis, angle);
+        let expected = Vector3::new(0.0, 1.0, 0.0);
+        assert!(rotated.fuzzy_equal(&expected, 1e-15));
+    }
+
+    #[test]
+    fn from_spherical() {
+        let radius = 1.0;
+        let polar = std::f64::consts::FRAC_PI_2;
+        let azimuth = 0.0;
+        let v = Vector3::from_spherical(radius, polar, azimuth);
+        let expected = Vector3::new(1.0, 0.0, 0.0);
+        assert!(v.fuzzy_equal(&expected, 1e-15));
+    }
+
+    #[test]
     fn nan_dont_panic() {
         let mut vec1: Vector3<f64> = Vector3::default();
         vec1 /= f64::NAN;
@@ -343,8 +620,8 @@ mod tests {
         let mut v2: Vector3<f64> = Vector3::new(3.0, 1.0, 2.0);
 
         // Basic operations
-        let sum = v1 + v2;
-        let difference = v1 - v2;
+        let sum = &v1 + &v2;
+        let difference = &v1 - &v2;
         let dot_product = v1.dot(&v2);
         let cross_product = v1.cross(&v2);
 
