@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::{Vector3, Vector3Coordinate};
 use thiserror::Error;
 
@@ -42,39 +40,12 @@ pub enum ParseVector3Error {
     InvalidVec(usize),
 }
 
-impl<T> FromStr for Vector3<T>
-where
-    T: Vector3Coordinate + FromStr,
-{
-    type Err = ParseVector3Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() < 14 {
-            return Err(ParseVector3Error::InvalidStringFormat);
-        }
-
-        if &s[..8] != "Vector3(" || !s.ends_with(')') {
-            return Err(ParseVector3Error::InvalidStringFormat);
-        }
-
-        let data = &s[8..s.len() - 1];
-        let mut new_vector: [T; 3] = [T::zero(), T::zero(), T::zero()];
-        for (index, coord) in data.split(',').take(3).enumerate() {
-            new_vector[index] = coord
-                .trim()
-                .parse::<T>()
-                .map_err(|_| ParseVector3Error::StringParseComponentError(index + 1))?;
-        }
-
-        Ok(Self::from(new_vector))
-    }
-}
-
 macro_rules! impl_try_from_stringlike {
     ($($string_type:ty),*) => {
         $(
             impl<T> TryFrom<$string_type> for Vector3<T>
             where
-                T: Vector3Coordinate + FromStr,
+                T: Vector3Coordinate + std::str::FromStr,
             {
                 type Error = ParseVector3Error;
 
@@ -89,7 +60,7 @@ macro_rules! impl_try_from_stringlike {
 
 impl_try_from_stringlike!(&str, String, Box<str>, std::borrow::Cow<'_, str>);
 
-impl<T: Vector3Coordinate + std::fmt::Debug> TryFrom<Vec<T>> for Vector3<T> {
+impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
     type Error = ParseVector3Error;
     fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
         let array: [T; 3] = value
@@ -99,14 +70,97 @@ impl<T: Vector3Coordinate + std::fmt::Debug> TryFrom<Vec<T>> for Vector3<T> {
     }
 }
 
+impl<T: Vector3Coordinate> TryFrom<std::collections::VecDeque<T>> for Vector3<T> {
+    type Error = ParseVector3Error;
+    fn try_from(mut value: std::collections::VecDeque<T>) -> Result<Self, Self::Error> {
+        let x = value
+            .pop_front()
+            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
+        let y = value
+            .pop_front()
+            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
+        let z = value
+            .pop_front()
+            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
+        Ok(Self::new(x, y, z))
+    }
+}
+
+impl<T> std::str::FromStr for Vector3<T>
+where
+    T: Vector3Coordinate + std::str::FromStr,
+{
+    type Err = ParseVector3Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Some(data) = s.strip_prefix("Vector3(") else {
+            return Err(ParseVector3Error::InvalidStringFormat);
+        };
+        let Some(data) = data.strip_suffix(")") else {
+            return Err(ParseVector3Error::InvalidStringFormat);
+        };
+
+        let components: Result<Vec<T>, ParseVector3Error> = data
+            .split(',')
+            .take(3)
+            .enumerate()
+            .map(|(index, coord)| {
+                coord
+                    .trim()
+                    .parse::<T>()
+                    .map_err(|_| ParseVector3Error::StringParseComponentError(index + 1))
+            })
+            .collect();
+
+        let components = components?;
+        components.try_into()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn text() {
-        let v1: Vector3<i32> = Vector3::new(1, 2, 3);
+    fn vec_string() {
+        let v1 = Vector3::new(1, 2, 3);
         let v2 = Vector3::try_from(String::from("Vector3( 1,2,     3)")).unwrap();
-        assert!(v1 == v2);
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn vec_str() {
+        let v1 = Vector3::new(1, 2, 3);
+        let v2 = "Vector3(1,  2 ,3 )".try_into().unwrap();
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn vec_tuple() {
+        let v1 = Vector3::new(1, 2, 3);
+        let v2 = (1, 2, 3).into();
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn vec_array() {
+        let v1 = Vector3::new(1, 2, 3);
+        let v2 = [1, 2, 3].into();
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn vec_vec() {
+        let v1 = Vector3::new(1, 2, 3);
+        let v2 = vec![1, 2, 3].try_into().unwrap();
+        assert_eq!(v1, v2);
+    }
+
+    #[test]
+    fn vec_deq() {
+        let v1 = Vector3::new(1, 2, 3);
+        let v2 = std::collections::VecDeque::from([1, 2, 3])
+            .try_into()
+            .unwrap();
+        assert_eq!(v1, v2);
     }
 }
