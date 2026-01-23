@@ -10,6 +10,8 @@ mod convert;
 mod float_lerp;
 mod ops;
 
+use std::any::type_name;
+
 use float_lerp::Lerp;
 use num_traits::clamp;
 #[cfg(feature = "random")]
@@ -67,7 +69,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     ///
     /// let epsilon = 0.01;
     /// let is_approx_equal = v1.fuzzy_equal(&v2, epsilon);
-    /// println!("Are v1 and v2 approximately equal? {}", is_approx_equal);
+    /// assert!(is_approx_equal)
     /// ```
     #[must_use]
     #[inline]
@@ -94,8 +96,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     #[must_use]
     #[inline]
     pub fn magnitude(&self) -> T {
-        let mag2 = self.x * self.x + self.y * self.y + self.z * self.z;
-        mag2.sqrt()
+        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     /// Computes the angle in radians between this vector and another vector.
@@ -116,20 +117,16 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     #[inline]
     pub fn angle_deg(&self, target: &Self) -> T {
         const COEFF: f64 = 180.0 / std::f64::consts::PI;
-        self.angle(target) * T::from(COEFF).unwrap()
+        self.angle(target)
+            * T::from(COEFF).unwrap_or_else(|| {
+                panic!("failed to express {COEFF:?} as type {}", type_name::<T>())
+            })
     }
 
     /// Scales the vector such that its magnitude becomes 1.
     #[inline]
     pub fn normalize(&mut self) {
         *self /= self.magnitude();
-    }
-
-    /// Computes the squared magnitude of the vector.
-    #[must_use]
-    #[inline]
-    pub fn magnitude_squared(&self) -> T {
-        self.dot(self)
     }
 
     /// Computes the distance between this vector and another vector.
@@ -139,25 +136,11 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
         (self - target).magnitude()
     }
 
-    /// Computes the squared distance between this vector and another vector.
-    #[must_use]
-    #[inline]
-    pub fn distance_squared(&self, target: &Self) -> T {
-        (self - target).magnitude_squared()
-    }
-
     /// Projects this vector onto another vector.
     #[must_use]
     #[inline]
     pub fn project(&self, on_normal: &Self) -> Self {
-        on_normal * (self.dot(on_normal) / on_normal.magnitude_squared())
-    }
-
-    /// Rejects this vector from another vector.
-    #[must_use]
-    #[inline]
-    pub fn reject(&self, on_normal: &Self) -> Self {
-        self - &self.project(on_normal)
+        on_normal * (self.dot(on_normal) / on_normal.dot(on_normal))
     }
 
     /// Reflects this vector off a surface defined by a normal.
@@ -166,20 +149,6 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     pub fn reflect(&self, normal: &Self) -> Self {
         let two = T::one() + T::one();
         self - &(normal * (self.dot(normal) * two))
-    }
-
-    /// Slides the vector along a plane defined by a normal.
-    #[must_use]
-    #[inline]
-    pub fn slide(&self, normal: &Self) -> Self {
-        self - &(normal * self.dot(normal))
-    }
-
-    /// Bounces the vector off a surface defined by a normal.
-    #[must_use]
-    #[inline]
-    pub fn bounce(&self, normal: &Self) -> Self {
-        self.reflect(normal)
     }
 
     /// Inverts the components of the vector.
@@ -498,13 +467,6 @@ mod tests {
     }
 
     #[test]
-    fn distance_squared() {
-        let v1 = Vector3::new(1.0, 2.0, 3.0);
-        let v2 = Vector3::new(4.0, 6.0, 8.0);
-        assert!((v1.distance_squared(&v2) - 50.0f64).abs() <= f64::EPSILON);
-    }
-
-    #[test]
     fn project() {
         let v = Vector3::new(1.0, 2.0, 3.0);
         let on_normal = Vector3::new(1.0, 0.0, 0.0);
@@ -513,35 +475,11 @@ mod tests {
     }
 
     #[test]
-    fn reject() {
-        let v = Vector3::new(1.0, 2.0, 3.0);
-        let on_normal = Vector3::new(1.0, 0.0, 0.0);
-        let expected = Vector3::new(0.0, 2.0, 3.0);
-        assert_eq!(v.reject(&on_normal), expected);
-    }
-
-    #[test]
     fn reflect() {
         let v = Vector3::new(1.0, -1.0, 0.0);
         let normal = Vector3::new(0.0, 1.0, 0.0);
         let expected = Vector3::new(1.0, 1.0, 0.0);
         assert_eq!(v.reflect(&normal), expected);
-    }
-
-    #[test]
-    fn slide() {
-        let v = Vector3::new(1.0, 1.0, 0.0);
-        let normal = Vector3::new(0.0, 1.0, 0.0);
-        let expected = Vector3::new(1.0, 0.0, 0.0);
-        assert_eq!(v.slide(&normal), expected);
-    }
-
-    #[test]
-    fn bounce() {
-        let v = Vector3::new(1.0, -1.0, 0.0);
-        let normal = Vector3::new(0.0, 1.0, 0.0);
-        let expected = Vector3::new(1.0, 1.0, 0.0);
-        assert_eq!(v.bounce(&normal), expected);
     }
 
     #[test]

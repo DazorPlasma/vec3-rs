@@ -56,8 +56,8 @@ macro_rules! impl_binary_op {
 
 impl_binary_op!(Add, add, +);
 impl_binary_op!(Sub, sub, -);
-impl_binary_op!(Mul, mul, *);
-impl_binary_op!(Div, div, /);
+// impl_binary_op!(Mul, mul, *);
+// impl_binary_op!(Div, div, /);
 
 macro_rules! impl_scalar_op {
     ($trait:ident, $method:ident, $op:tt) => {
@@ -114,13 +114,13 @@ impl<T: Vector3Coordinate> MulAssign<T> for Vector3<T> {
     }
 }
 
-impl<T: Vector3Coordinate> MulAssign<Vector3<T>> for Vector3<T> {
-    fn mul_assign(&mut self, rhs: Vector3<T>) {
-        self.x *= rhs.x;
-        self.y *= rhs.y;
-        self.z *= rhs.z;
-    }
-}
+// impl<T: Vector3Coordinate> MulAssign<Vector3<T>> for Vector3<T> {
+//     fn mul_assign(&mut self, rhs: Vector3<T>) {
+//         self.x *= rhs.x;
+//         self.y *= rhs.y;
+//         self.z *= rhs.z;
+//     }
+// }
 
 impl<T: Vector3Coordinate> DivAssign<T> for Vector3<T> {
     fn div_assign(&mut self, rhs: T) {
@@ -130,13 +130,13 @@ impl<T: Vector3Coordinate> DivAssign<T> for Vector3<T> {
     }
 }
 
-impl<T: Vector3Coordinate> DivAssign<Vector3<T>> for Vector3<T> {
-    fn div_assign(&mut self, rhs: Vector3<T>) {
-        self.x /= rhs.x;
-        self.y /= rhs.y;
-        self.z /= rhs.z;
-    }
-}
+// impl<T: Vector3Coordinate> DivAssign<Vector3<T>> for Vector3<T> {
+//     fn div_assign(&mut self, rhs: Vector3<T>) {
+//         self.x /= rhs.x;
+//         self.y /= rhs.y;
+//         self.z /= rhs.z;
+//     }
+// }
 
 impl<T: Vector3Coordinate + Neg<Output = T>> Neg for Vector3<T> {
     type Output = Self;
