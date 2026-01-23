@@ -1,3 +1,4 @@
+#![allow(clippy::use_self)]
 use crate::{Vector3, Vector3Coordinate};
 
 impl<T: Vector3Coordinate> std::ops::Add<Vector3<T>> for Vector3<T> {

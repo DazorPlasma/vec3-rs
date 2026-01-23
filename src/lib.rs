@@ -1,9 +1,9 @@
 #![deny(unsafe_code)]
-// #![deny(warnings)]
+#![deny(warnings)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
+#![deny(clippy::nursery)]
 #![deny(clippy::cargo)]
-#![allow(clippy::cast_possible_truncation)]
 
 pub mod consts;
 mod convert;

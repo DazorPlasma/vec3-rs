@@ -1,5 +1,3 @@
-#![deny(unsafe_code, warnings, clippy::all)]
-
 use std::str::FromStr;
 
 use crate::{Vector3, Vector3Coordinate};
