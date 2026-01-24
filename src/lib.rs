@@ -1,21 +1,26 @@
-#![deny(unsafe_code)]
 #![deny(warnings)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![deny(clippy::nursery)]
 #![deny(clippy::cargo)]
 
-pub mod consts;
+mod consts;
 mod convert;
 mod float_lerp;
 mod ops;
-
-use std::any::type_name;
+mod ops_scalar;
 
 use float_lerp::Lerp;
 use num_traits::clamp;
+use std::any::type_name;
+
 #[cfg(feature = "random")]
-use rand::Rng;
+use rand::{rngs::ThreadRng, Rng};
+
+thread_local! {
+    #[cfg(feature = "random")]
+    static RNG: std::cell::RefCell<ThreadRng> = std::cell::RefCell::new(rand::rng());
+}
 
 pub trait Vector3Coordinate:
     num_traits::Num
@@ -45,11 +50,20 @@ impl<T> Vector3Coordinate for T where
 
 /// Represents a vector in 3D space.
 #[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Debug, PartialEq, Default, Clone)]
+#[derive(Debug, PartialEq, Eq, Default, Clone, Copy, Hash)]
 pub struct Vector3<T: Vector3Coordinate> {
     x: T,
     y: T,
     z: T,
+}
+
+impl<T> PartialOrd for Vector3<T>
+where
+    T: Vector3Coordinate + num_traits::Float,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.magnitude().partial_cmp(&other.magnitude())
+    }
 }
 
 impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
@@ -102,7 +116,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Computes the angle in radians between this vector and another vector.
     #[must_use]
     #[inline]
-    pub fn angle(&self, target: &Self) -> T {
+    pub fn angle(&self, target: Self) -> T {
         let dot_product = self.dot(target);
         let magnitude_product = self.magnitude() * target.magnitude();
         (dot_product / magnitude_product).acos()
@@ -115,7 +129,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Panics if `T`, the vector's datatype, cannot be converted to a f64.
     #[must_use]
     #[inline]
-    pub fn angle_deg(&self, target: &Self) -> T {
+    pub fn angle_deg(&self, target: Self) -> T {
         const COEFF: f64 = 180.0 / std::f64::consts::PI;
         self.angle(target)
             * T::from(COEFF).unwrap_or_else(|| {
@@ -132,23 +146,23 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Computes the distance between this vector and another vector.
     #[must_use]
     #[inline]
-    pub fn distance(&self, target: &Self) -> T {
-        (self - target).magnitude()
+    pub fn distance(&self, target: Self) -> T {
+        (*self - target).magnitude()
     }
 
     /// Projects this vector onto another vector.
     #[must_use]
     #[inline]
-    pub fn project(&self, on_normal: &Self) -> Self {
+    pub fn project(&self, on_normal: Self) -> Self {
         on_normal * (self.dot(on_normal) / on_normal.dot(on_normal))
     }
 
     /// Reflects this vector off a surface defined by a normal.
     #[must_use]
     #[inline]
-    pub fn reflect(&self, normal: &Self) -> Self {
+    pub fn reflect(&self, normal: Self) -> Self {
         let two = T::one() + T::one();
-        self - &(normal * (self.dot(normal) * two))
+        *self - (normal * (self.dot(normal) * two))
     }
 
     /// Inverts the components of the vector.
@@ -221,14 +235,14 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Rotates the vector around an axis by a given angle in radians.
     #[must_use]
     #[inline]
-    pub fn rotated(&self, axis: &Self, angle: T) -> Self {
+    pub fn rotated(&self, axis: Self, angle: T) -> Self {
         let (sin, cos) = angle.sin_cos();
         let axis_normalized = axis / axis.magnitude();
 
-        let term1 = self * cos;
-        let term2 = axis_normalized.cross(self) * sin;
-        let term3_scalar = axis_normalized.dot(self) * (T::one() - cos);
-        let term3 = &axis_normalized * term3_scalar;
+        let term1 = *self * cos;
+        let term2 = axis_normalized.cross(*self) * sin;
+        let term3_scalar = axis_normalized.dot(*self) * (T::one() - cos);
+        let term3 = axis_normalized * term3_scalar;
 
         term1 + term2 + term3
     }
@@ -259,12 +273,11 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     where
         rand::distr::StandardUniform: rand::prelude::Distribution<T>,
     {
-        let mut thread = rand::rng();
-        Self {
+        RNG.with_borrow_mut(|thread| Self {
             x: thread.random(),
             y: thread.random(),
             z: thread.random(),
-        }
+        })
     }
 }
 
@@ -285,20 +298,20 @@ impl<T: Vector3Coordinate> Vector3<T> {
     /// Computes the dot product between this vector and another vector.
     #[must_use]
     #[inline]
-    pub fn dot(&self, target: &Self) -> T {
-        self.x.clone() * target.x.clone()
-            + self.y.clone() * target.y.clone()
-            + self.z.clone() * target.z.clone()
+    pub fn dot(&self, target: Self) -> T {
+        let (x, y, z) = target.into();
+        self.x.clone() * x + self.y.clone() * y + self.z.clone() * z
     }
 
     /// Computes the cross product between this vector and another vector.
     #[must_use]
     #[inline]
-    pub fn cross(&self, target: &Self) -> Self {
+    pub fn cross(&self, target: Self) -> Self {
+        let (x, y, z) = target.into();
         Self {
-            x: self.y.clone() * target.z.clone() - self.z.clone() * target.y.clone(),
-            y: self.z.clone() * target.x.clone() - self.x.clone() * target.z.clone(),
-            z: self.x.clone() * target.y.clone() - self.y.clone() * target.x.clone(),
+            x: self.y.clone() * z.clone() - self.z.clone() * y.clone(),
+            y: self.z.clone() * x.clone() - self.x.clone() * z,
+            z: self.x.clone() * y - self.y.clone() * x,
         }
     }
 
@@ -376,7 +389,7 @@ mod tests {
     #[test]
     fn angle() {
         let angle = std::f64::consts::PI / 2.0;
-        let calc_angle = Vector3::<f64>::x_axis().angle(&Vector3::<f64>::y_axis());
+        let calc_angle = Vector3::<f64>::x_axis().angle(Vector3::<f64>::y_axis());
         assert!(calc_angle.sub(angle) <= f64::EPSILON);
     }
 
@@ -392,7 +405,7 @@ mod tests {
     fn sum() {
         let vec1 = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
-        assert_eq!(&vec1 + &vec2, Vector3::new(6.0, 2.0, 2.0));
+        assert_eq!(vec1 + vec2, Vector3::new(6.0, 2.0, 2.0));
     }
 
     #[test]
@@ -422,7 +435,7 @@ mod tests {
     fn dot_product() {
         let vec1 = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
-        let dot_result = vec1.dot(&vec2);
+        let dot_result = vec1.dot(vec2);
         assert!((dot_result - 2.0f64).abs() <= f64::EPSILON);
     }
 
@@ -430,7 +443,7 @@ mod tests {
     fn cross_product() {
         let vec1 = Vector3::new(1.0, 0.0, 0.0);
         let vec2 = Vector3::new(0.0, 1.0, 0.0);
-        let cross_result = vec1.cross(&vec2);
+        let cross_result = vec1.cross(vec2);
         assert_eq!(cross_result, Vector3::new(0.0, 0.0, 1.0));
     }
 
@@ -463,7 +476,7 @@ mod tests {
     fn distance() {
         let v1 = Vector3::new(1.0, 2.0, 3.0);
         let v2 = Vector3::new(4.0, 6.0, 8.0);
-        assert!((v1.distance(&v2) - (50.0f64).sqrt()).abs() <= f64::EPSILON);
+        assert!((v1.distance(v2) - (50.0f64).sqrt()).abs() <= f64::EPSILON);
     }
 
     #[test]
@@ -471,7 +484,7 @@ mod tests {
         let v = Vector3::new(1.0, 2.0, 3.0);
         let on_normal = Vector3::new(1.0, 0.0, 0.0);
         let expected = Vector3::new(1.0, 0.0, 0.0);
-        assert_eq!(v.project(&on_normal), expected);
+        assert_eq!(v.project(on_normal), expected);
     }
 
     #[test]
@@ -479,7 +492,7 @@ mod tests {
         let v = Vector3::new(1.0, -1.0, 0.0);
         let normal = Vector3::new(0.0, 1.0, 0.0);
         let expected = Vector3::new(1.0, 1.0, 0.0);
-        assert_eq!(v.reflect(&normal), expected);
+        assert_eq!(v.reflect(normal), expected);
     }
 
     #[test]
@@ -531,7 +544,7 @@ mod tests {
         let v = Vector3::new(1.0, 0.0, 0.0);
         let axis = Vector3::new(0.0, 0.0, 1.0);
         let angle = std::f64::consts::FRAC_PI_2;
-        let rotated = v.rotated(&axis, angle);
+        let rotated = v.rotated(axis, angle);
         let expected = Vector3::new(0.0, 1.0, 0.0);
         assert!(rotated.fuzzy_equal(&expected, 1e-15));
     }
@@ -558,14 +571,14 @@ mod tests {
         let mut v2: Vector3<f64> = Vector3::new(3.0, 1.0, 2.0);
 
         // Basic operations
-        let sum = &v1 + &v2;
-        let difference = &v1 - &v2;
-        let dot_product = v1.dot(&v2);
-        let cross_product = v1.cross(&v2);
+        let sum = v1 + v2;
+        let difference = v1 - v2;
+        let dot_product = v1.dot(v2);
+        let cross_product = v1.cross(v2);
 
         // Other methods
         let lerp_result = v1.lerp(&v2, 0.5);
-        let angle = v1.angle(&v2);
+        let angle = v1.angle(v2);
         let fuzzy_equal = v1.fuzzy_equal(&v2, 0.001);
 
         println!("Sum: {sum}");

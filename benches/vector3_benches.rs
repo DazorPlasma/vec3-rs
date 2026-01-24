@@ -1,12 +1,20 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::{hint::black_box, time::Duration};
 use vec3_rs::Vector3;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("vec3 add", |b| {
-        let v1 = Vector3::new(1.0, 2.0, 3.0);
-        let v2 = Vector3::new(4.0, 5.0, 6.0);
-        b.iter(|| black_box(&v1) + black_box(&v2))
+    let mut group = c.benchmark_group("vec3 add group");
+    group.sample_size(10000);
+    group.warm_up_time(Duration::from_secs(1));
+    group.measurement_time(Duration::from_secs(30));
+    group.bench_function("vec3 add", |b| {
+        b.iter(|| {
+            let v1: Vector3<f64> = Vector3::random();
+            let v2 = Vector3::random();
+            black_box(v1 + v2)
+        });
     });
+    group.finish();
 }
 
 criterion_group!(benches, criterion_benchmark);
