@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
