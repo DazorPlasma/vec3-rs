@@ -1,7 +1,7 @@
 [package]
 name = "vec3-rs"
 version = "0.2.6"
-edition = "2021"
+edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
 authors = ["Dazor Plasma <dazorplasma@proton.me>"]
@@ -9,8 +9,8 @@ documentation = "https://docs.rs/vec3-rs"
 readme = "README.md"
 license = "MIT"
 keywords = ["math", "vector", "geometry", "3d"]
-categories = ["data-structures", "graphics", "mathematics"]
-rust-version = "1.78.0"
+categories = ["graphics", "mathematics"]
+rust-version = "1.85.0"
 
 
 [dependencies]
@@ -29,3 +29,9 @@ random = ["dep:rand"]
 [[bench]]
 name = "vector3_benches"
 harness = false
+
+[profile.bench]
+inherits = "release"
+lto = true
+codegen-units = 1
+debug = true
