@@ -1,4 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+//! Vector3<f64> benchmarks.
+
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::{hint::black_box, time::Duration};
 use vec3_rs::Vector3;
 

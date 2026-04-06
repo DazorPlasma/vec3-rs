@@ -1,8 +1,4 @@
-#![deny(warnings)]
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![deny(clippy::nursery)]
-#![deny(clippy::cargo)]
+//! This crate provides a simple implementation of 3D vectors in Rust. Supports any numeric type trough num-traits.
 
 mod consts;
 mod convert;
@@ -12,16 +8,22 @@ mod ops_scalar;
 
 use float_lerp::Lerp;
 use num_traits::clamp;
-use std::any::type_name;
-
 #[cfg(feature = "random")]
-use rand::{rngs::ThreadRng, Rng};
+use rand::{
+    RngExt,
+    distr::uniform::{SampleRange, SampleUniform},
+    make_rng,
+    rngs::SmallRng,
+};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 thread_local! {
     #[cfg(feature = "random")]
-    static RNG: std::cell::RefCell<ThreadRng> = std::cell::RefCell::new(rand::rng());
+    static RNG: std::cell::RefCell<SmallRng> = std::cell::RefCell::new(make_rng());
 }
 
+/// Trait representing accepted coordonate kind `T` for `Vector3<T>`.
 pub trait Vector3Coordinate:
     num_traits::Num
     + num_traits::ToPrimitive
@@ -49,21 +51,12 @@ impl<T> Vector3Coordinate for T where
 }
 
 /// Represents a vector in 3D space.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Debug, PartialEq, Eq, Default, Clone, Copy, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector3<T: Vector3Coordinate> {
     x: T,
     y: T,
     z: T,
-}
-
-impl<T> PartialOrd for Vector3<T>
-where
-    T: Vector3Coordinate + num_traits::Float,
-{
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.magnitude().partial_cmp(&other.magnitude())
-    }
 }
 
 impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
@@ -123,18 +116,14 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     }
 
     /// Computes the angle in degrees between this vector and another vector.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `T`, the vector's datatype, cannot be converted to a f64.
     #[must_use]
     #[inline]
-    pub fn angle_deg(&self, target: Self) -> T {
+    pub fn angle_deg(&self, target: Self) -> T
+    where
+        T: From<f64>,
+    {
         const COEFF: f64 = 180.0 / std::f64::consts::PI;
-        self.angle(target)
-            * T::from(COEFF).unwrap_or_else(|| {
-                panic!("failed to express {COEFF:?} as type {}", type_name::<T>())
-            })
+        self.angle(target) * From::from(COEFF)
     }
 
     /// Scales the vector such that its magnitude becomes 1.
@@ -269,6 +258,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Generates a random Vector3 with components in the range [0.0, 1.0).
     #[cfg(feature = "random")]
     #[must_use]
+    #[inline]
     pub fn random() -> Self
     where
         rand::distr::StandardUniform: rand::prelude::Distribution<T>,
@@ -277,6 +267,26 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
             x: thread.random(),
             y: thread.random(),
             z: thread.random(),
+        })
+    }
+
+    /// Generates a random Vector3 with components in the given ranges.
+    #[cfg(feature = "random")]
+    #[must_use]
+    #[inline]
+    pub fn random_range(
+        range_x: impl SampleRange<T>,
+        range_y: impl SampleRange<T>,
+        range_z: impl SampleRange<T>,
+    ) -> Self
+    where
+        rand::distr::StandardUniform: rand::prelude::Distribution<T>,
+        T: SampleUniform,
+    {
+        RNG.with_borrow_mut(|thread| Self {
+            x: thread.random_range(range_x),
+            y: thread.random_range(range_y),
+            z: thread.random_range(range_z),
         })
     }
 }
@@ -594,5 +604,11 @@ mod tests {
 
         println!("v1 normalized: {v1}");
         println!("v2 normalized: {v2}");
+    }
+    #[test]
+    fn conversion_box() {
+        let correct = Vector3::new(1, 2, 3);
+        let x = String::from("Vector3(1,2,3)").into_boxed_str();
+        assert_eq!(x.parse::<Vector3<i32>>().unwrap(), correct);
     }
 }

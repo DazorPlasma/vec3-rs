@@ -14,13 +14,13 @@ impl<T: Vector3Coordinate + Neg<Output = T>> Neg for Vector3<T> {
     }
 }
 
-impl<T: Vector3Coordinate + Neg<Output = T>> Neg for &Vector3<T> {
+impl<T: Vector3Coordinate + Neg<Output = T> + Copy> Neg for &Vector3<T> {
     type Output = Vector3<T>;
     fn neg(self) -> Self::Output {
         Vector3 {
-            x: -self.x.clone(),
-            y: -self.y.clone(),
-            z: -self.z.clone(),
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }

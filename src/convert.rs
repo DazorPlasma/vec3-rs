@@ -40,26 +40,6 @@ pub enum ParseVector3Error {
     InvalidVec(usize),
 }
 
-macro_rules! impl_try_from_stringlike {
-    ($($string_type:ty),*) => {
-        $(
-            impl<T> TryFrom<$string_type> for Vector3<T>
-            where
-                T: Vector3Coordinate + std::str::FromStr,
-            {
-                type Error = ParseVector3Error;
-
-                fn try_from(s: $string_type) -> Result<Self, Self::Error> {
-                    let s_str: &str = s.as_ref();
-                    s_str.parse::<Self>()
-                }
-            }
-        )*
-    };
-}
-
-impl_try_from_stringlike!(&str, String, Box<str>, std::borrow::Cow<'_, str>);
-
 impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
     type Error = ParseVector3Error;
     fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
@@ -122,15 +102,15 @@ mod test {
 
     #[test]
     fn vec_string() {
-        let v1 = Vector3::new(1, 2, 3);
-        let v2 = Vector3::try_from(String::from("Vector3( 1,2,     3)")).unwrap();
+        let v1: Vector3<i32> = Vector3::new(1, 2, 3);
+        let v2: Vector3<i32> = String::from("Vector3( 1,2,     3)").parse().unwrap();
         assert_eq!(v1, v2);
     }
 
     #[test]
     fn vec_str() {
         let v1 = Vector3::new(1, 2, 3);
-        let v2 = "Vector3(1,  2 ,3 )".try_into().unwrap();
+        let v2 = "Vector3(1,  2 ,3 )".parse().unwrap();
         assert_eq!(v1, v2);
     }
 
