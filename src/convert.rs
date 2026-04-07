@@ -24,6 +24,7 @@ impl<T: Vector3Coordinate> From<[T; 3]> for Vector3<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: Vector3Coordinate> From<Vector3<T>> for [T; 3] {
     fn from(value: Vector3<T>) -> Self {
         [value.x, value.y, value.z]
@@ -40,6 +41,7 @@ pub enum ParseVector3Error {
     InvalidVec(usize),
 }
 
+#[cfg(feature = "std")]
 impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
     type Error = ParseVector3Error;
     fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
@@ -50,6 +52,7 @@ impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<T: Vector3Coordinate> TryFrom<std::collections::VecDeque<T>> for Vector3<T> {
     type Error = ParseVector3Error;
     fn try_from(mut value: std::collections::VecDeque<T>) -> Result<Self, Self::Error> {
@@ -66,9 +69,9 @@ impl<T: Vector3Coordinate> TryFrom<std::collections::VecDeque<T>> for Vector3<T>
     }
 }
 
-impl<T> std::str::FromStr for Vector3<T>
+impl<T> core::str::FromStr for Vector3<T>
 where
-    T: Vector3Coordinate + std::str::FromStr,
+    T: Vector3Coordinate + core::str::FromStr,
 {
     type Err = ParseVector3Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -79,20 +82,30 @@ where
             return Err(ParseVector3Error::InvalidStringFormat);
         };
 
-        let components: Result<Vec<T>, ParseVector3Error> = data
+        let mut components = data
             .split(',')
             .take(3)
             .enumerate()
-            .map(|(index, coord)| {
+            .flat_map(|(index, coord)| {
                 coord
                     .trim()
                     .parse::<T>()
                     .map_err(|_| ParseVector3Error::StringParseComponentError(index + 1))
-            })
-            .collect();
+            });
 
-        let components = components?;
-        components.try_into()
+        // dear rust, collect into array/tuple when?
+        // do i seriously need to pull itertools for this??
+        let x = components
+            .next()
+            .ok_or(ParseVector3Error::StringParseComponentError(1))?;
+        let y = components
+            .next()
+            .ok_or(ParseVector3Error::StringParseComponentError(2))?;
+        let z = components
+            .next()
+            .ok_or(ParseVector3Error::StringParseComponentError(3))?;
+
+        Ok(Self::new(x, y, z))
     }
 }
 

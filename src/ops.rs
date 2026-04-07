@@ -1,6 +1,6 @@
 #![allow(clippy::use_self)]
 use crate::{Vector3, Vector3Coordinate};
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 impl<T: Vector3Coordinate> Add<Vector3<T>> for Vector3<T> {
     type Output = Vector3<T>;

@@ -1,3 +1,5 @@
+#![cfg(any(feature = "std", feature = "libm"))]
+
 pub trait Lerp<T: num_traits::Float> {
     /// Performs linear interpolation between `self` and `goal` based on the given `alpha`.
     ///

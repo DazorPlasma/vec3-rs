@@ -1,7 +1,7 @@
 #![allow(clippy::use_self)]
 
 use crate::{Vector3, Vector3Coordinate};
-use std::ops::{Div, DivAssign, Mul, MulAssign, Neg};
+use core::ops::{Div, DivAssign, Mul, MulAssign, Neg};
 
 impl<T: Vector3Coordinate + Neg<Output = T>> Neg for Vector3<T> {
     type Output = Self;

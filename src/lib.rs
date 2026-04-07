@@ -1,12 +1,17 @@
 //! This crate provides a simple implementation of 3D vectors in Rust. Supports any numeric type trough num-traits.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 mod consts;
 mod convert;
+#[cfg(any(feature = "std", feature = "libm"))]
 mod float_lerp;
 mod ops;
 mod ops_scalar;
 
+#[cfg(any(feature = "std", feature = "libm"))]
 use float_lerp::Lerp;
+#[cfg(any(feature = "std", feature = "libm"))]
 use num_traits::clamp;
 #[cfg(feature = "random")]
 use rand::{
@@ -15,11 +20,9 @@ use rand::{
     make_rng,
     rngs::SmallRng,
 };
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "random")]
 thread_local! {
-    #[cfg(feature = "random")]
     static RNG: std::cell::RefCell<SmallRng> = std::cell::RefCell::new(make_rng());
 }
 
@@ -28,11 +31,11 @@ pub trait Vector3Coordinate:
     num_traits::Num
     + num_traits::ToPrimitive
     + PartialOrd
-    + std::fmt::Display
-    + std::ops::AddAssign
-    + std::ops::SubAssign
-    + std::ops::MulAssign
-    + std::ops::DivAssign
+    + core::fmt::Display
+    + core::ops::AddAssign
+    + core::ops::SubAssign
+    + core::ops::MulAssign
+    + core::ops::DivAssign
     + Clone
 {
 }
@@ -41,24 +44,25 @@ impl<T> Vector3Coordinate for T where
     T: num_traits::Num
         + num_traits::ToPrimitive
         + PartialOrd
-        + std::fmt::Display
-        + std::ops::AddAssign
-        + std::ops::SubAssign
-        + std::ops::MulAssign
-        + std::ops::DivAssign
+        + core::fmt::Display
+        + core::ops::AddAssign
+        + core::ops::SubAssign
+        + core::ops::MulAssign
+        + core::ops::DivAssign
         + Clone
 {
 }
 
 /// Represents a vector in 3D space.
 #[derive(Debug, PartialEq, Eq, Default, Clone, Copy, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vector3<T: Vector3Coordinate> {
     x: T,
     y: T,
     z: T,
 }
 
+#[cfg(any(feature = "std", feature = "libm"))]
 impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// Checks if this vector is approximately equal to another vector within a given epsilon.
     ///
@@ -122,7 +126,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     where
         T: From<f64>,
     {
-        const COEFF: f64 = 180.0 / std::f64::consts::PI;
+        const COEFF: f64 = 180.0 / core::f64::consts::PI;
         self.angle(target) * From::from(COEFF)
     }
 
@@ -309,7 +313,7 @@ impl<T: Vector3Coordinate> Vector3<T> {
     #[must_use]
     #[inline]
     pub fn dot(&self, target: Self) -> T {
-        let (x, y, z) = target.into();
+        let (x, y, z): (T, T, T) = target.into();
         self.x.clone() * x + self.y.clone() * y + self.z.clone() * z
     }
 
@@ -317,7 +321,7 @@ impl<T: Vector3Coordinate> Vector3<T> {
     #[must_use]
     #[inline]
     pub fn cross(&self, target: Self) -> Self {
-        let (x, y, z) = target.into();
+        let (x, y, z): (T, T, T) = target.into();
         Self {
             x: self.y.clone() * z.clone() - self.z.clone() * y.clone(),
             y: self.z.clone() * x.clone() - self.x.clone() * z,
@@ -385,8 +389,8 @@ impl<T: Vector3Coordinate> Vector3<T> {
     }
 }
 
-impl<T: Vector3Coordinate> std::fmt::Display for Vector3<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<T: Vector3Coordinate> core::fmt::Display for Vector3<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Vector3({}, {}, {})", self.x, self.y, self.z)
     }
 }
@@ -394,11 +398,11 @@ impl<T: Vector3Coordinate> std::fmt::Display for Vector3<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ops::Sub;
+    use core::ops::Sub;
 
     #[test]
     fn angle() {
-        let angle = std::f64::consts::PI / 2.0;
+        let angle = core::f64::consts::PI / 2.0;
         let calc_angle = Vector3::<f64>::x_axis().angle(Vector3::<f64>::y_axis());
         assert!(calc_angle.sub(angle) <= f64::EPSILON);
     }
@@ -553,7 +557,7 @@ mod tests {
     fn rotated() {
         let v = Vector3::new(1.0, 0.0, 0.0);
         let axis = Vector3::new(0.0, 0.0, 1.0);
-        let angle = std::f64::consts::FRAC_PI_2;
+        let angle = core::f64::consts::FRAC_PI_2;
         let rotated = v.rotated(axis, angle);
         let expected = Vector3::new(0.0, 1.0, 0.0);
         assert!(rotated.fuzzy_equal(&expected, 1e-15));
@@ -562,7 +566,7 @@ mod tests {
     #[test]
     fn from_spherical() {
         let radius = 1.0;
-        let polar = std::f64::consts::FRAC_PI_2;
+        let polar = core::f64::consts::FRAC_PI_2;
         let azimuth = 0.0;
         let v = Vector3::from_spherical(radius, polar, azimuth);
         let expected = Vector3::new(1.0, 0.0, 0.0);
