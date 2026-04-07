@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["math", "vector", "geometry", "3d"]
 categories = ["graphics", "mathematics"]
-rust-version = "1.89.0"
+rust-version = "1.93.0"
 
 
 [dependencies]

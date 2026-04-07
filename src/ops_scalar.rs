@@ -1,5 +1,3 @@
-#![allow(clippy::use_self)]
-
 use crate::{Vector3, Vector3Coordinate};
 use core::ops::{Div, DivAssign, Mul, MulAssign, Neg};
 
@@ -26,7 +24,7 @@ impl<T: Vector3Coordinate + Neg<Output = T> + Copy> Neg for &Vector3<T> {
 }
 
 impl<T: Vector3Coordinate> Mul<T> for Vector3<T> {
-    type Output = Vector3<T>;
+    type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
         Self {
             x: self.x * rhs.clone(),
@@ -37,7 +35,7 @@ impl<T: Vector3Coordinate> Mul<T> for Vector3<T> {
 }
 
 impl<T: Vector3Coordinate> Div<T> for Vector3<T> {
-    type Output = Vector3<T>;
+    type Output = Self;
     fn div(self, rhs: T) -> Self::Output {
         Self {
             x: self.x / rhs.clone(),

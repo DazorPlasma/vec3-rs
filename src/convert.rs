@@ -1,5 +1,4 @@
 use crate::{Vector3, Vector3Coordinate};
-use thiserror::Error;
 
 impl<T: Vector3Coordinate> From<(T, T, T)> for Vector3<T> {
     fn from(value: (T, T, T)) -> Self {
@@ -31,7 +30,7 @@ impl<T: Vector3Coordinate> From<Vector3<T>> for [T; 3] {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum ParseVector3Error {
     #[error("failed to parse #{0}th component")]
     StringParseComponentError(usize),
@@ -39,6 +38,8 @@ pub enum ParseVector3Error {
     InvalidStringFormat,
     #[error("invalid vector length: expected 3, got {0}")]
     InvalidVec(usize),
+    #[error("invalid slice length: expected 3, got {0}")]
+    InvalidSlice(usize),
 }
 
 #[cfg(feature = "std")]
@@ -65,7 +66,30 @@ impl<T: Vector3Coordinate> TryFrom<std::collections::VecDeque<T>> for Vector3<T>
         let z = value
             .pop_front()
             .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
+
         Ok(Self::new(x, y, z))
+    }
+}
+
+impl<T: Vector3Coordinate> TryFrom<&[T]> for Vector3<T> {
+    type Error = ParseVector3Error;
+    fn try_from(value: &[T]) -> Result<Self, Self::Error> {
+        let array: &[T; 3] = value
+            .as_array()
+            .ok_or(ParseVector3Error::InvalidSlice(value.len()))?;
+
+        Ok(Self::from(array.clone()))
+    }
+}
+
+impl<T: Vector3Coordinate> TryFrom<Box<[T]>> for Vector3<T> {
+    type Error = ParseVector3Error;
+    fn try_from(value: Box<[T]>) -> Result<Self, Self::Error> {
+        let array: &[T; 3] = value
+            .as_array()
+            .ok_or(ParseVector3Error::InvalidSlice(value.len()))?;
+
+        Ok(Self::from(array.clone()))
     }
 }
 

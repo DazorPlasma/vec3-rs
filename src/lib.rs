@@ -615,4 +615,19 @@ mod tests {
         let x = String::from("Vector3(1,2,3)").into_boxed_str();
         assert_eq!(x.parse::<Vector3<i32>>().unwrap(), correct);
     }
+    #[test]
+    fn from_slice() {
+        let correct = Vector3::new(1, 2, 3);
+        let arr = [1, 2, 3].as_ref();
+        let x = Vector3::try_from(arr).unwrap();
+        assert_eq!(correct, x);
+    }
+
+    #[test]
+    fn from_box_slice() {
+        let correct = Vector3::new(1, 2, 3);
+        let arr: Box<[i32]> = Box::from([1, 2, 3].as_ref());
+        let x = Vector3::try_from(arr).unwrap();
+        assert_eq!(correct, x);
+    }
 }
