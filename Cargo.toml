@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.3.3"
+version = "0.4.0"
 edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
@@ -41,7 +41,6 @@ opt-level = 3
 name = "vector3_benches"
 harness = false
 
-
 [profile.bench]
 inherits = "release"
 lto = true
@@ -58,3 +57,4 @@ multiple_crate_versions = { level = "allow", priority = 4 }
 [lints.rust]
 warnings = { level = "deny", priority = 0 }
 missing_docs = { level = "deny", priority = 0 }
+unsafe_code = { level = "deny", priority = 0 }
