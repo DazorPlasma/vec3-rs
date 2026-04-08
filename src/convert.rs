@@ -146,7 +146,7 @@ mod test {
 
     #[test]
     fn vec_str() {
-        let v1 = Vector3::new(1, 2, 3);
+        let v1: Vector3<f64> = Vector3::new(1, 2, 3);
         let v2 = "Vector3(1,  2 ,3 )".parse().unwrap();
         assert_eq!(v1, v2);
     }

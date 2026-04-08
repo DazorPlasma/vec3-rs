@@ -301,11 +301,29 @@ impl<T: Vector3Coordinate> Vector3<T> {
     /// # Examples
     ///
     /// ```
-    /// use vec3_rs::Vector3;
+    /// type Vector3 = vec3_rs::Vector3<f64>;
     ///
     /// let vector3 = Vector3::new(1.0, 2.0, 3.0);
+    /// let also_ok = Vector3::new(1, 2, 3);
+    /// assert_eq!(vector3, also_ok);
+    ///
+    /// // can also be created from arrays and tuples
+    /// // but no automatic number conversion
+    /// let from_array = Vector3::from([1.0, 2.0, 3.0]);
+    /// let from_tuple = Vector3::from((1.0, 2.0, 3.0));
+    /// assert_eq!(vector3, from_array);
+    /// assert_eq!(vector3, from_tuple);
+    ///
+    /// // conversion is fallible with unknown sized data types
+    /// let slice: &[f64] = [1.0, 2.0, 3.0].as_ref();
+    /// let from_slice = Vector3::try_from(slice).unwrap();
+    /// let from_vec = Vector3::try_from(vec![1.0, 2.0, 3.0]).unwrap();
+    /// assert_eq!(vector3, from_slice);
+    /// assert_eq!(vector3, from_vec);
+    ///
     /// ```
-    pub const fn new(x: T, y: T, z: T) -> Self {
+    pub fn new<U: Into<T>>(x: U, y: U, z: U) -> Self {
+        let (x, y, z) = (x.into(), y.into(), z.into());
         Self { x, y, z }
     }
 
@@ -417,7 +435,7 @@ mod tests {
 
     #[test]
     fn sum() {
-        let vec1 = Vector3::new(1.0, 2.0, 3.0);
+        let vec1: Vector3<f64> = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
         assert_eq!(vec1 + vec2, Vector3::new(6.0, 2.0, 2.0));
     }
@@ -447,7 +465,7 @@ mod tests {
 
     #[test]
     fn dot_product() {
-        let vec1 = Vector3::new(1.0, 2.0, 3.0);
+        let vec1: Vector3<f64> = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(5.0, 0.0, -1.0);
         let dot_result = vec1.dot(vec2);
         assert!((dot_result - 2.0f64).abs() <= f64::EPSILON);
@@ -455,7 +473,7 @@ mod tests {
 
     #[test]
     fn cross_product() {
-        let vec1 = Vector3::new(1.0, 0.0, 0.0);
+        let vec1: Vector3<f64> = Vector3::new(1.0, 0.0, 0.0);
         let vec2 = Vector3::new(0.0, 1.0, 0.0);
         let cross_result = vec1.cross(vec2);
         assert_eq!(cross_result, Vector3::new(0.0, 0.0, 1.0));
@@ -463,7 +481,7 @@ mod tests {
 
     #[test]
     fn max_components() {
-        let vec1 = Vector3::new(1.0, 5.0, 3.0);
+        let vec1: Vector3<f64> = Vector3::new(1.0, 5.0, 3.0);
         let vec2 = Vector3::new(3.0, 2.0, 4.0);
         let max_result = vec1.max(&vec2);
         assert_eq!(max_result, Vector3::new(3.0, 5.0, 4.0));
@@ -471,7 +489,7 @@ mod tests {
 
     #[test]
     fn min_components() {
-        let vec1 = Vector3::new(1.0, 5.0, 3.0);
+        let vec1: Vector3<f64> = Vector3::new(1.0, 5.0, 3.0);
         let vec2 = Vector3::new(3.0, 2.0, 4.0);
         let min_result = vec1.min(&vec2);
         assert_eq!(min_result, Vector3::new(1.0, 2.0, 3.0));
@@ -488,14 +506,14 @@ mod tests {
 
     #[test]
     fn distance() {
-        let v1 = Vector3::new(1.0, 2.0, 3.0);
+        let v1: Vector3<f64> = Vector3::new(1.0, 2.0, 3.0);
         let v2 = Vector3::new(4.0, 6.0, 8.0);
         assert!((v1.distance(v2) - (50.0f64).sqrt()).abs() <= f64::EPSILON);
     }
 
     #[test]
     fn project() {
-        let v = Vector3::new(1.0, 2.0, 3.0);
+        let v: Vector3<f64> = Vector3::new(1.0, 2.0, 3.0);
         let on_normal = Vector3::new(1.0, 0.0, 0.0);
         let expected = Vector3::new(1.0, 0.0, 0.0);
         assert_eq!(v.project(on_normal), expected);
@@ -503,7 +521,7 @@ mod tests {
 
     #[test]
     fn reflect() {
-        let v = Vector3::new(1.0, -1.0, 0.0);
+        let v: Vector3<f64> = Vector3::new(1.0, -1.0, 0.0);
         let normal = Vector3::new(0.0, 1.0, 0.0);
         let expected = Vector3::new(1.0, 1.0, 0.0);
         assert_eq!(v.reflect(normal), expected);
@@ -511,35 +529,35 @@ mod tests {
 
     #[test]
     fn inverse() {
-        let v = Vector3::new(2.0, 4.0, 8.0);
+        let v: Vector3<f64> = Vector3::new(2.0, 4.0, 8.0);
         let expected = Vector3::new(0.5, 0.25, 0.125);
         assert_eq!(v.inverse(), expected);
     }
 
     #[test]
     fn abs() {
-        let v = Vector3::new(-1.0, -2.0, 3.0);
+        let v: Vector3<f64> = Vector3::new(-1.0, -2.0, 3.0);
         let expected = Vector3::new(1.0, 2.0, 3.0);
         assert_eq!(v.abs(), expected);
     }
 
     #[test]
     fn ceil() {
-        let v = Vector3::new(1.1, 2.9, 3.0);
+        let v: Vector3<f64> = Vector3::new(1.1, 2.9, 3.0);
         let expected = Vector3::new(2.0, 3.0, 3.0);
         assert_eq!(v.ceil(), expected);
     }
 
     #[test]
     fn floor() {
-        let v = Vector3::new(1.1, 2.9, 3.0);
+        let v: Vector3<f64> = Vector3::new(1.1, 2.9, 3.0);
         let expected = Vector3::new(1.0, 2.0, 3.0);
         assert_eq!(v.floor(), expected);
     }
 
     #[test]
     fn round() {
-        let v = Vector3::new(1.1, 2.9, 3.5);
+        let v: Vector3<f64> = Vector3::new(1.1, 2.9, 3.5);
         let expected = Vector3::new(1.0, 3.0, 4.0);
         assert_eq!(v.round(), expected);
     }
