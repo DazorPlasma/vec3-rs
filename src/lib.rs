@@ -121,7 +121,7 @@ impl<T: Vector3Coordinate + num_traits::Float> Vector3<T> {
     /// ```
     /// type Vector3 = vec3_rs::Vector3<f64>;
     ///
-    /// let mut vector3 = Vector3::new(12354,7324,-7765).normalized();
+    /// let mut vector3 = Vector3::new(12354, 7324, -7765).normalized();
     /// assert_eq!(vector3.magnitude(), 1.0);
     /// ```
     #[must_use]
