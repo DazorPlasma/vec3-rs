@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
@@ -31,11 +31,6 @@ default = ["std"]
 std = ["serde/std", "rand/std", "num-traits/std"]
 libm = ["num-traits/libm"]
 random = ["dep:rand", "std"]
-
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = 3
 
 [[bench]]
 name = "vector3_benches"
