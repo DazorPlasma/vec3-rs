@@ -18,7 +18,7 @@ fn main() {
     let v3 = v3.cross(v2);
     let v3 = v3 * v3.dot(v1);
     let v3 = v3 * 10.0 / 3.2;
-    let v3 = v3.normalized() + Vector3::one();
+    let v3 = (v3 + Vector3::one()).normalized();
     let v3 = v3.lerp(Vector3::zero(), 0.25);
     let v3 = v3.floor() + Vector3::one();
 
