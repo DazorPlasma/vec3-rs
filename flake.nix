@@ -26,16 +26,11 @@
         rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs;
-            [
-              rustToolchain
-              pkg-config
-              openssl
-            ]
-            ++ lib.optionals stdenv.isDarwin [
-              darwin.apple_sdk.frameworks.Security
-              darwin.apple_sdk.frameworks.SystemConfiguration
-            ];
+          buildInputs = with pkgs; [
+            rustToolchain
+            pkg-config
+            openssl
+          ];
 
           env = {
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
