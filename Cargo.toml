@@ -1,6 +1,6 @@
 [package]
 name = "vec3-rs"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 description = "minimal 3d vector implementation"
 repository = "https://github.com/DazorPlasma/vec3-rs"
@@ -16,15 +16,15 @@ rust-version = "1.93.0"
 [dependencies]
 num-traits = { version = "0.2.19", default-features = false }
 rand = { version = "0.10.2", optional = true, default-features = false }
-serde = { version = "1.0.228", optional = true, default-features = false, features = [
+serde = { version = "1.0.229", optional = true, default-features = false, features = [
 	"serde_derive",
 ] }
-thiserror = "2.0.18"
+thiserror = "2.0.20"
 
 [dev-dependencies]
 criterion = "0.8.2"
-rand = "0.10.0"
-serde = "1.0.228"
+rand = "0.10.2"
+serde = "1.0.229"
 
 [features]
 default = ["std"]

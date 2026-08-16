@@ -2,11 +2,8 @@ use crate::{Vector3, Vector3Coordinate};
 
 impl<T: Vector3Coordinate> From<(T, T, T)> for Vector3<T> {
     fn from(value: (T, T, T)) -> Self {
-        Self {
-            x: value.0,
-            y: value.1,
-            z: value.2,
-        }
+        let (x, y, z) = value;
+        Self { x, y, z }
     }
 }
 
@@ -56,18 +53,13 @@ impl<T: Vector3Coordinate> TryFrom<Vec<T>> for Vector3<T> {
 #[cfg(feature = "std")]
 impl<T: Vector3Coordinate> TryFrom<std::collections::VecDeque<T>> for Vector3<T> {
     type Error = ParseVector3Error;
-    fn try_from(mut value: std::collections::VecDeque<T>) -> Result<Self, Self::Error> {
-        let x = value
-            .pop_front()
-            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
-        let y = value
-            .pop_front()
-            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
-        let z = value
-            .pop_front()
-            .ok_or(ParseVector3Error::InvalidVec(value.len()))?;
-
-        Ok(Self::new(x, y, z))
+    fn try_from(value: std::collections::VecDeque<T>) -> Result<Self, Self::Error> {
+        let original_len = value.len();
+        let mut iter = value.into_iter();
+        match (iter.next(), iter.next(), iter.next(), iter.next()) {
+            (Some(x), Some(y), Some(z), None) => Ok(Self::new(x, y, z)),
+            _ => Err(ParseVector3Error::InvalidVec(original_len)),
+        }
     }
 }
 
@@ -99,23 +91,19 @@ where
 {
     type Err = ParseVector3Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let Some(data) = s.strip_prefix("Vector3(") else {
+        let Some(s) = s.strip_prefix("Vector3(") else {
             return Err(ParseVector3Error::InvalidStringFormat);
         };
-        let Some(data) = data.strip_suffix(")") else {
+        let Some(s) = s.strip_suffix(")") else {
             return Err(ParseVector3Error::InvalidStringFormat);
         };
 
-        let mut components = data
-            .split(',')
-            .take(3)
-            .enumerate()
-            .flat_map(|(index, coord)| {
-                coord
-                    .trim()
-                    .parse::<T>()
-                    .map_err(|_| ParseVector3Error::StringParseComponentError(index + 1))
-            });
+        let mut components = s.split(',').take(3).enumerate().flat_map(|(index, coord)| {
+            coord
+                .trim()
+                .parse::<T>()
+                .map_err(|_| ParseVector3Error::StringParseComponentError(index + 1))
+        });
 
         // dear rust, collect into array/tuple when?
         // do i seriously need to pull itertools for this??
